@@ -95,8 +95,11 @@ class MyHandler(SimpleHTTPRequestHandler):
     def doFolder(self, subfolder):
         global imgList
         folder = os.path.join(baseFolder, subfolder)
+        if os.path.islink(folder):
+            print("Found a symlink")
+            folder = os.path.realpath(folder)
         print("Loading subfolder: " + subfolder)
-        print("Loading folder: " + folder)
+        print("Loading folder: " + folder + " " + str(os.path.islink(folder)))
 
 
         folderList = [ f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder,f)) ]
@@ -108,20 +111,20 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">')
         r.append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">')
         r.append('<link href="/~/css/swipebox.css" rel="stylesheet">')
+        r.append('<link href="/~/css/eyebrow.css" rel="stylesheet">')
         if os.path.basename(subfolder) != "":
             r.append('<title>' + os.path.basename(subfolder) + ' - Eyebrows</title>')
         else:
             r.append('<title>Eyebrows</title>')
         r.append('</head>')
         r.append('<body>')
+        r.append('<header class="container"><h1 class="col-sm-12" id="content"><img src="/~/img/logo-long.png" /></h1></header>')
 
-        r.append('<div class="container">')
-        r.append('<div class="col-sm-12">')
-        r.append('<h1><img src="/~/img/logo-long.png" /></h1>')
         link = "/" + os.path.dirname(subfolder)
         if subfolder == "":
             link = "/"
-        r.append('<ol class="breadcrumb">')
+        r.append('<nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">')
+        r.append('<ol class="breadcrumb container">')
         r.append('<a class="btn btn-default" href="' + link + '" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>')
         r.append('<li><a href="/">Home</a></li>')
         folders = os.path.normpath(folder).split(os.sep)[numBase + 1:]
@@ -130,16 +133,20 @@ class MyHandler(SimpleHTTPRequestHandler):
             link.append(f)
             r.append('<li><a href="/' + '/'.join(link) + '">' + f + '</a></li>')
         r.append('<a class="btn btn-default pull-right" title="Upload"><i class="fa fa-upload"></i></a>')
-        r.append('</ol>')
+        r.append('</ol></nav>')
 
-        r.append('<table class="table table-hover">')
-        r.append("<tr><th></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>")
+
+        r.append('<div class="container">')
+        r.append('<div class="col-sm-12">')
+
+        r.append('<form role="form"><table id="file-list" class="table table-hover">')
+        r.append("<tr><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>")
         for f in folderList:
             r.append(self.getFolder(subfolder, f))
 
         for f in fileList:
             r.append(self.getFile(folder, subfolder, f))
-        r.append('</table>')
+        r.append('</table></form>')
 
         # Nice idea but does not work
         #imgList = [("\n{href:'/" + subfolder + "/" + i + "', title:'/" + subfolder + "/" + i + "'}") for i in imgList]
@@ -185,9 +192,10 @@ class MyHandler(SimpleHTTPRequestHandler):
         link = "/".join([subfolder, name])
         if subfolder == "":
             link = name
-        return "<tr><td></td>" + \
+        urllib.parse.quote(link)
+        return "<tr><td><input type='checkbox' class='check' value='" + link + "'></td>" + \
                "<td><i class='fa fa-" + (fileIcons[ext] if ext in fileIcons else "file-o") + "'></i></td>" + \
-               "<td><a href='" + link.replace("'", "&#39;") + "'" + \
+               "<td><a href='" + link + "'" + \
                (" class='img-file'" if ext in fileIcons else "") + ">" + name.replace("'","&#39;") + "</a></td>" + \
                "<td><small>" + formatBytes(os.path.getsize(os.path.join(folder, name))) + "</small></td>" + \
                "<td><small>" + time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name)))) + "</small></td></tr>"
@@ -197,7 +205,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         link = "/".join([subfolder, name])
         if subfolder == "":
             link = name
-        return "<tr><td></td><td><i class='fa fa-folder'></i></td><td><a href='/" + link + "'>" + name + "</a></td><td></td><td></td></tr>"
+        return "<tr><td><input type='checkbox'></td><td><i class='fa fa-folder'></i></td>" + \
+               "<td><a href='/" + link + "'>" + name + "</a></td><td></td><td></td></tr>"
 
     def notFound(self, folder):
         r = "Nope"
@@ -352,6 +361,7 @@ HandlerClass.protocol_version = Protocol
 
 
 try:
+    #httpd = HTTPServer(server_address, MyHandler)
     httpd = SecureHTTPServer(server_address, MyHandler)
     print ("Server Started")
     httpd.serve_forever()
