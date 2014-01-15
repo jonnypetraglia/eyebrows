@@ -16,6 +16,7 @@
 Dude I don't even know about config yet. So far here is what you can do:
   * baseFolder = the folder you want to start in and restrict access to
   * port = port it will be serving on
+  * hideBarsDelay = for images how many ms before the titlebar hides; set to 0 for it to never hide
 
 
 2. Why?
@@ -34,8 +35,9 @@ Also I wanted to write something simple in Python.
   * [Python 3.3.3](http://www.python.org/)
   * [Bootstrap 3.0.3](http://getbootstrap.com/)
   * [FontAwesome 4.0.3](http://fontawesome.io/)
-  * [FlexSlider 2.2.2](https://github.com/woothemes/FlexSlider)
-
+  * [Swipebox 4e8338ec27](https://github.com/brutaldesign/swipebox/tree/4e8338ec2740ca75eb8a39247c275f1a1b3d7539)
+  * [Sala de Fiest font](http://openfontlibrary.org/en/font/sala-de-fiesta)
+  * [Eyebrow Photoshop Brush](http://www.photoshopwebsite.com/photoshop-brushes/28-photoshop-eyebrow-brushes-free-download/)
 
 4. Licenses
 ----------------
@@ -47,4 +49,8 @@ Eyebrows itself is released under the BSD license.
 Other components are licensed as followed:
   * Bootstrap: MIT
   * FontAwesome: OFL & MIT
-  * FlexSlider: GPLv2
+  * Swipebox: MIT
+  * Sala de Fiesta: MIT:
+  * Eyebrow Photoshop Brush: Custom
+  
+  

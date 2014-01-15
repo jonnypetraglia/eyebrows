@@ -7,10 +7,13 @@ import os
 from os.path import expanduser
 
 baseFolder = expanduser("~")
-port = 8081
+port = 8080
+hideBarsDelay = 0
 
 
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
+imgList = []
+parameters = []
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -18,18 +21,44 @@ class MyHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
     def do_GET(self):
-        theArg = urllib.parse.unquote(self.path[1:])
+        print("Getting: " + self.path)
+
+        theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
+
+        if theArg.startswith("~"):
+            return self.getResource(theArg[2:])
+
+        parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+
         pathVar = os.path.join(baseFolder, theArg)
-        print("Getting: " + self.path + "  " + pathVar + "  " + os.path.join(baseFolder, self.path))
+        print("Getting: " + theArg + "  " + pathVar + "  " + os.path.join(baseFolder, theArg))
         if not os.path.exists(pathVar):
-            return self.notFound(self.path)
+            return self.notFound(theArg)
+
         if os.path.isdir(pathVar):
             self.doFolder(theArg)
         if os.path.isfile(pathVar):
-            self.downloadFile(theArg)
+            self.downloadFile(theArg, parameters)
 
-    def downloadFile(self, relPath):
+    def getResource(self, relPath):
+        print("Resourcing: " + relPath)
+        f = open(os.path.normpath(relPath), 'rb')
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html;charset=utf-8')
+        dat = f.read()
+        self.send_header("Content-length", len(dat))
+        #self.send_header('Connection', 'Close')
+        self.end_headers()
+        self.wfile.write(dat)
+        self.wfile.flush()
+        f.close()
+
+    def downloadFile(self, relPath, parameters):
         print("Downloading: " + relPath)
+        if "i" in parameters and parameters["i"]:
+            SimpleHTTPRequestHandler.do_GET(self)
+            return
+
         derp, ext = os.path.splitext(relPath)
         ext = ext[1:].lower()
         f = open(os.path.join(baseFolder, relPath), 'rb')
@@ -42,12 +71,14 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-type', 'application/octet-stream')
         dat = f.read()
         self.send_header("Content-length", len(dat))
+        #self.send_header('Connection', 'Close')
         self.end_headers()
         self.wfile.write(dat)
         self.wfile.flush()
         f.close()
 
     def doFolder(self, subfolder):
+        global imgList
         folder = os.path.join(baseFolder, subfolder)
         print("Loading subfolder: " + subfolder)
         print("Loading folder: " + folder)
@@ -61,6 +92,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('<head>')
         r.append('<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">')
         r.append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">')
+        r.append('<link href="/~/css/swipebox.css" rel="stylesheet">')
         if os.path.basename(subfolder) != "":
             r.append('<title>' + os.path.basename(subfolder) + ' - Eyebrows</title>')
         else:
@@ -68,26 +100,9 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('</head>')
         r.append('<body>')
 
-        r.append('<div class="flexslider">')
-        r.append('<ul class="slides">')
-        r.append('<li>')
-        r.append('<img src="slide1.jpg" />')
-        r.append('</li>')
-        r.append('<li>')
-        r.append('<img src="slide2.jpg" />')
-        r.append('</li>')
-        r.append('<li>')
-        r.append('<img src="slide3.jpg" />')
-        r.append('</li>')
-        r.append('<li>')
-        r.append('<img src="slide4.jpg" />')
-        r.append('</li>')
-        r.append('</ul>')
-        r.append('</div>')
-
         r.append('<div class="container">')
         r.append('<div class="col-sm-12">')
-        r.append('<h1>Eyebrows</h1>')
+        r.append('<h1><img src="/~/img/logo-long.png" /></h1>')
         link = "/" + os.path.dirname(subfolder)
         if subfolder == "":
             link = "/"
@@ -111,28 +126,54 @@ class MyHandler(SimpleHTTPRequestHandler):
             r.append(self.getFile(folder, subfolder, f))
         r.append('</table>')
 
+        # Nice idea but does not work
+        #imgList = [("\n{href:'/" + subfolder + "/" + i + "', title:'/" + subfolder + "/" + i + "'}") for i in imgList]
+        print("imgList")
+        print(imgList)
+
         r.append('</div>')
         r.append('</div>')
-        r.append('<script type="text/javascript" src="js/jquery.flexslider-min.js">')
+        r.append('<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>')
+        r.append('<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>')
+        r.append('<script src="/~/js/jquery.swipebox.js"></script>')
+        r.append('<script type="text/javascript">')
+        r.append('window.imageArray = [')
+        print("Yo so")
+        r.append("\n{href:'/" + subfolder + "/" + imgList[0] + "', title:'" + imgList[0] + "'}")
+        for i in imgList[1:]:
+            r.append(",\n{href:'/" + subfolder + "/" + i.replace("'", "&#39;") + "', title:'" + i.replace("'", "&#39;") + "'}")
+        # Again: nice idea, no worky.
+        #r.append('window.imageArray = [' + ",".join(imgList) + "];")
+        r.append('];')
+
+        r.append('hideBarsDelay = ' + str(hideBarsDelay) + ';')
+        r.append('</script>')
+        r.append('<script src="/~/js/eyebrows.js"></script>')
         r.append('</body>')
         r.append('</html>')
         r = '\n'.join(r)
+        print(r)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
         self.end_headers()
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
+        print("Done")
 
     def getFile(self, folder, subfolder, name):
         derp, ext = os.path.splitext(name)
         ext = ext[1:].lower()
+        if ext in fileIcons and fileIcons[ext] == "picture-o":
+            imgList.append(name)
+
         link = "/".join([subfolder, name])
         if subfolder == "":
             link = name
         return "<tr><td></td>" + \
                "<td><i class='fa fa-" + (fileIcons[ext] if ext in fileIcons else "file-o") + "'></i></td>" + \
-               "<td><a href='" + link + "'>" + name + "</a></td>" + \
+               "<td><a href='" + link.replace("'", "&#39;") + "'" + \
+               (" class='img-file'" if ext in fileIcons else "") + ">" + name.replace("'","&#39;") + "</a></td>" + \
                "<td><small>" + formatBytes(os.path.getsize(os.path.join(folder, name))) + "</small></td>" + \
                "<td><small>" + time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name)))) + "</small></td></tr>"
 
@@ -151,6 +192,9 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
+
+    def clickImg(self, name):
+        r = []
 
 
 def formatBytes(inputInt):
@@ -285,9 +329,9 @@ fileIcons = {
 
 
 HandlerClass = MyHandler
-Protocol = "HTTP/1.1"
+Protocol = "HTTP/1.0"
 
-server_address = ('localhost', port)
+server_address = ('0.0.0.0', port)
 
 HandlerClass.protocol_version = Protocol
 
