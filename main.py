@@ -36,7 +36,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         if ext == "html" or ext == "htm":
             self.send_header('Content-type', 'text/html;charset=utf-8')
-        elif ext in fileIcons and (fileIcons[ext]=="file-text-o" or fileIcons[ext]=="code"):
+        elif ext in fileIcons and (fileIcons[ext] == "file-text-o" or fileIcons[ext] == "code"):
             self.send_header('Content-type', 'text/plain;charset=utf-8')
         else:
             self.send_header('Content-type', 'application/octet-stream')
@@ -61,13 +61,29 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('<head>')
         r.append('<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">')
         r.append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">')
-        if os.path.basename(subfolder)!="":
+        if os.path.basename(subfolder) != "":
             r.append('<title>' + os.path.basename(subfolder) + ' - Eyebrows</title>')
         else:
             r.append('<title>Eyebrows</title>')
         r.append('</head>')
         r.append('<body>')
 
+        r.append('<div class="flexslider">')
+        r.append('<ul class="slides">')
+        r.append('<li>')
+        r.append('<img src="slide1.jpg" />')
+        r.append('</li>')
+        r.append('<li>')
+        r.append('<img src="slide2.jpg" />')
+        r.append('</li>')
+        r.append('<li>')
+        r.append('<img src="slide3.jpg" />')
+        r.append('</li>')
+        r.append('<li>')
+        r.append('<img src="slide4.jpg" />')
+        r.append('</li>')
+        r.append('</ul>')
+        r.append('</div>')
 
         r.append('<div class="container">')
         r.append('<div class="col-sm-12">')
@@ -78,7 +94,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('<ol class="breadcrumb">')
         r.append('<a class="btn btn-default" href="' + link + '"><i class="fa fa-level-up fa-flip-horizontal"></i></a>')
 
-        folders = os.path.normpath(folder).split(os.sep)[numBase+1:]
+        folders = os.path.normpath(folder).split(os.sep)[numBase + 1:]
         r.append('<li><a href="/">Home</a></li>')
         link = []
         for f in folders:
@@ -137,13 +153,12 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.wfile.flush()
 
 
-
 def formatBytes(inputInt):
     suffixes = ["", "K", "M", "G", "T"]
     i = 0
     while inputInt > 2000:
-        inputInt/=1024.0
-        i+=1
+        inputInt /= 1024.0
+        i += 1
     return "{0:.2f}".format(inputInt) + " " + suffixes[i] + "B"
 
 
