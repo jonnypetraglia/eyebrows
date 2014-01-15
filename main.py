@@ -4,7 +4,10 @@ from http.server import SimpleHTTPRequestHandler
 import time
 import urllib.parse
 import os
+import socket
+import ssl
 from os.path import expanduser
+from socketserver import BaseServer
 
 baseFolder = expanduser("~")
 port = 8080
@@ -14,6 +17,18 @@ hideBarsDelay = 0
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
 parameters = []
+
+
+class SecureHTTPServer(HTTPServer):
+    def __init__(self, server_address, HandlerClass):
+        BaseServer.__init__(self, server_address, HandlerClass)
+        self.socket = ssl.SSLSocket(
+            sock=socket.socket(self.address_family,self.socket_type),
+            ssl_version=ssl.PROTOCOL_TLSv1,
+            certfile='server.pem',
+            server_side=True)
+        self.server_bind()
+        self.server_activate()
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -107,14 +122,14 @@ class MyHandler(SimpleHTTPRequestHandler):
         if subfolder == "":
             link = "/"
         r.append('<ol class="breadcrumb">')
-        r.append('<a class="btn btn-default" href="' + link + '"><i class="fa fa-level-up fa-flip-horizontal"></i></a>')
-
-        folders = os.path.normpath(folder).split(os.sep)[numBase + 1:]
+        r.append('<a class="btn btn-default" href="' + link + '" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>')
         r.append('<li><a href="/">Home</a></li>')
+        folders = os.path.normpath(folder).split(os.sep)[numBase + 1:]
         link = []
         for f in folders:
             link.append(f)
             r.append('<li><a href="/' + '/'.join(link) + '">' + f + '</a></li>')
+        r.append('<a class="btn btn-default pull-right" title="Upload"><i class="fa fa-upload"></i></a>')
         r.append('</ol>')
 
         r.append('<table class="table table-hover">')
@@ -135,7 +150,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         r.append('</div>')
         r.append('<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>')
         r.append('<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>')
-        r.append('<script src="/~/js/jquery.swipebox.js"></script>')
+        r.append('<script src="/~/js/jquery.swipebox.min.js"></script>')
         r.append('<script type="text/javascript">')
         r.append('window.imageArray = [')
         print("Yo so")
@@ -337,7 +352,7 @@ HandlerClass.protocol_version = Protocol
 
 
 try:
-    httpd = HTTPServer(server_address, MyHandler)
+    httpd = SecureHTTPServer(server_address, MyHandler)
     print ("Server Started")
     httpd.serve_forever()
 except KeyboardInterrupt:
