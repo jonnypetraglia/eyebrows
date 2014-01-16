@@ -86,6 +86,7 @@ fileIcons = {
     'asx': 'film',
     'avi': 'film',
     'dv': 'film',
+    'flv': 'film',
     'm4v': 'film',
     'mkv': 'film',
     'mov': 'film',

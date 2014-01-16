@@ -38,10 +38,10 @@
                 <tr><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
 
                 % for f in folderList:
-                    ${doFolder(subfolder, f)}
+                    ${doFolder(f)}
                 % endfor
                 % for f in fileList:
-                    ${doFile(subfolder, f)}
+                    ${doFile(f)}
                 % endfor
 
             </table>
@@ -70,7 +70,7 @@
 </html>
 
 
-<%def name="doFolder(subfolder, name)">
+<%def name="doFolder(name)">
     <tr>
         <td>
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
@@ -79,7 +79,7 @@
             <i class='fa fa-folder'></i>
         </td>
         <td>
-            <a href='${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
+            <a href='/${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
         </td>
         <td></td>
         <td></td>
@@ -87,7 +87,7 @@
 </%def>
 
 
-<%def name="doFile(subfolder, name)">
+<%def name="doFile(name)">
     <%
         import os
         import urllib.parse
