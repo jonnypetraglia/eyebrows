@@ -1,8 +1,5 @@
-import os
-baseFolder = os.path.expanduser("~")
-port = 8080
+port = 9002
 hideBarsDelay = 0
 protocol = "HTTP/1.0"
-useSSL = True
-username = "admin"
-password = "admin"
+useSSL = False
+ignoreHidden = True

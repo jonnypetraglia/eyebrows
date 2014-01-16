@@ -14,7 +14,24 @@ import os
 from mako.template import Template
 # Project files
 from icontypes import fileIcons
+from utils import *
+# Config
+baseFolder = os.path.expanduser("~")
+port = 8080
+hideBarsDelay = 3000
+protocol = "HTTP/1.0"
+useSSL = True
+username = "admin"
+password = "admin"
+ignoreHidden = False
 from config import *
+
+if os.name == 'nt':
+    try:
+        import win32api
+        import win32con
+    except ImportError:
+        ignoreHidden = False
 
 
 # Temp variables that are automatically set. DO NOT TOUCH
@@ -107,10 +124,10 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         link_dest = os.path.dirname(subfolder) if subfolder else ""
         page_title = os.path.basename(subfolder)
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase:]
 
-        folderList = [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))]
-        fileList = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
 
         r = maintemplate.render(subfolder=subfolder,
                                 link_dest=link_dest,
@@ -161,8 +178,8 @@ class MyHandler(SimpleHTTPRequestHandler):
     ## Packs a folder inside the ZIP; is recursive
     def _packFolder(self, z, subfolder, target):
         folder = os.path.join(baseFolder, subfolder, target)
-        folderList = [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))]
-        fileList = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
         for f in fileList:
             fullpath = os.path.join(baseFolder, subfolder, target, f)
             fulltarget = os.path.join(target, f)

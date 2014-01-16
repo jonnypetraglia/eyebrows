@@ -19,6 +19,9 @@ Dude I don't even know about config yet. So far here is what you can do:
   * hideBarsDelay = for images how many ms before the titlebar hides; set to 0 for it to never hide
   * protocol = either "HTTP/1.0" or "HTTP/1.1"
   * useSSL = whether or not to serve through SSL; hint: do it
+  * username = for authentication
+  * password = for authentication
+  * ignoreHidden = whether or not to ignore hidden files
 
 
 2. Why?
@@ -44,6 +47,9 @@ Also I wanted to write something simple in Python.
   * [Eyebrow Photoshop Brush](http://www.photoshopwebsite.com/photoshop-brushes/28-photoshop-eyebrow-brushes-free-download/)
 
 
+Optional:
+  * [pywin32 218](http://sourceforge.net/projects/pywin32/) (if you want to set "ignoreHidden" on Windows)
+
 4. Licenses
 ----------------
 
@@ -60,4 +66,5 @@ Other components are licensed as followed:
   * Swipebox: MIT
   * Sala de Fiesta: MIT:
   * Eyebrow Photoshop Brush: Custom
+  * pywin32: PSF
 
