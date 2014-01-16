@@ -22,7 +22,8 @@
     ".json", 
     ".js", 
     ".ini", 
-    ".md"
+    ".md", 
+    ".gitignore"
   ], 
   "project-type": "", 
   "postExecScript": "", 

@@ -1,0 +1,133 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+    <link rel="icon" type="image/x-icon" href="/~/img/favicon.ico" />
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/~/css/swipebox.css" rel="stylesheet">
+    <link href="/~/css/eyebrow.css" rel="stylesheet">
+
+    % if page_title != "":
+        <title>${page_title} - Eyebrows</title>
+    % else:
+        <title>Eyebrows</title>
+    % endif
+
+</head>
+<body>
+    <form role="form" method="post" action="/">
+        <input type="hidden" name="subfolder" value="${subfolder}">
+        <header class="container"><h1 class="col-sm-12" id="content"><img src="/~/img/logo-long.png" /></h1></header>
+
+        <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
+            <ol class="breadcrumb container">
+                <a class="btn btn-default" href="${link_dest}" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>
+                <li><a href="/">Home</a></li>
+
+                % for f in nav_folders:
+                    <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
+                % endfor
+
+                <a class="btn btn-default pull-right" title="Upload"><i class="fa fa-upload"></i></a>
+                <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
+            </ol>
+        </nav>
+
+        <div class="container">
+            <div class="col-sm-12">
+            <table id="file-list" class="table table-hover">
+                <tr><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+
+                % for f in folderList:
+                    ${doFolder(subfolder, f)}
+                % endfor
+                % for f in fileList:
+                    ${doFile(subfolder, f)}
+                % endfor
+
+            </table>
+
+            </div>
+        </div>
+    </form>
+    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script src="/~/js/jquery.swipebox.min.js"></script>
+    <script type="text/javascript">
+        window.imageArray = [
+
+            % if len(imgList) > 0:
+                {href:'/${subfolder}/${imgList[0]}', title:'${imgList[0]}'}
+            % endif
+            % for i in imgList[1:]:
+                ,{href:'/${subfolder}/${i.replace("'", "&#39;")}', title:'${i.replace("'", "&#39;")}'}
+            % endfor
+
+        ];
+        hideBarsDelay = ${str(hideBarsDelay)};
+    </script>
+    <script src="/~/js/eyebrows.js"></script>
+</body>
+</html>
+
+
+<%def name="doFolder(subfolder, name)">
+    <tr>
+        <td>
+            <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
+        </td>
+        <td>
+            <i class='fa fa-folder'></i>
+        </td>
+        <td>
+            <a href='${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
+        </td>
+        <td></td>
+        <td></td>
+    </tr>
+</%def>
+
+
+<%def name="doFile(subfolder, name)">
+    <%
+        import os
+        import urllib.parse
+        import time
+        from utils import formatBytes
+
+        folder = os.path.join(baseFolder, subfolder)
+        derp, ext = os.path.splitext(name)
+        ext = ext[1:].lower()
+
+        if ext in fileIcons and fileIcons[ext] == "picture-o":
+            imgList.append(name)
+            imgclass = "class='img-file'"
+        else:
+            imgclass = ""
+
+        link = "/".join([subfolder, name])
+        if subfolder == "":
+            link = name
+        urllib.parse.quote(link)
+    %>
+    <tr>
+        <td>
+            <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
+        </td>
+        <td>
+            <i class='fa fa-${fileIcons[ext] if ext in fileIcons else "file-o"}'></i>
+        </td>
+        <td>
+            <a href='${link}' ${imgclass}>${name.replace("'", "&#39;")}</a>
+        </td>
+        <td>
+            <small>
+                ${formatBytes(os.path.getsize(os.path.join(folder, name)))}
+            </small>
+        </td>
+        <td>
+            <small>
+                ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
+            </small>
+        </td>
+    </tr>
+</%def>

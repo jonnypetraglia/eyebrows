@@ -6,30 +6,20 @@ import urllib.parse
 from socketserver import BaseServer
 import socket
 import ssl
-
 # Used for zip file generation
 from zipstream import zipstream
-
 # Misc
 import os
-import time
-
+from mako.template import Template
 # Project files
 from icontypes import fileIcons
-
-
-# Configuration variables
-baseFolder = os.path.expanduser("~")
-port = 8080
-hideBarsDelay = 0
-protocol = "HTTP/1.0"
-useSSL = True
+from config import *
 
 
 # Temp variables that are automatically set. DO NOT TOUCH
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
-
+maintemplate = Template(filename='main.html')
 
 
 ### Main class that handles everything ###
@@ -103,73 +93,25 @@ class MyHandler(SimpleHTTPRequestHandler):
             print("Found a symlink")
             folder = os.path.realpath(folder)
 
+        link_dest = os.path.dirname(subfolder) if subfolder else ""
+        page_title = os.path.basename(subfolder)
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+
         folderList = [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))]
         fileList = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
-        r = []
-        r.append('<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">')
-        r.append('<head>')
-        r.append('<link rel="icon" type="image/x-icon" href="/~/img/favicon.ico" />')
-        r.append('<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">')
-        r.append('<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">')
-        r.append('<link href="/~/css/swipebox.css" rel="stylesheet">')
-        r.append('<link href="/~/css/eyebrow.css" rel="stylesheet">')
-        if os.path.basename(subfolder) != "":
-            r.append('<title>' + os.path.basename(subfolder) + ' - Eyebrows</title>')
-        else:
-            r.append('<title>Eyebrows</title>')
-        r.append('</head>')
-        r.append('<body>')
-        r.append('<form role="form" method="post" action="/">')
-        r.append('<input type="hidden" name="subfolder" value="' + subfolder + '"></input>')
-        r.append('<header class="container"><h1 class="col-sm-12" id="content"><img src="/~/img/logo-long.png" /></h1></header>')
 
-        link = "/" + os.path.dirname(subfolder)
-        if subfolder == "":
-            link = "/"
-        r.append('<nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">')
-        r.append('<ol class="breadcrumb container">')
-        r.append('<a class="btn btn-default" href="' + link + '" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>')
-        r.append('<li><a href="/">Home</a></li>')
-        folders = os.path.normpath(folder).split(os.sep)[numBase + 1:]
-        link = []
-        for f in folders:
-            link.append(f)
-            r.append('<li><a href="/' + '/'.join(link) + '">' + f + '</a></li>')
-        r.append('<a class="btn btn-default pull-right" title="Upload"><i class="fa fa-upload"></i></a>')
-        r.append('<button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>')
-        r.append('</ol></nav>')
+        r = maintemplate.render(subfolder=subfolder,
+                                link_dest=link_dest,
+                                page_title=page_title,
+                                nav_folders=nav_folders,
+                                folderList=folderList,
+                                fileList=fileList,
+                                imgList=imgList,
+                                hideBarsDelay=hideBarsDelay,
+                                fileIcons=fileIcons,
+                                baseFolder=baseFolder)
+        print(r)
 
-        r.append('<div class="container">')
-        r.append('<div class="col-sm-12">')
-        r.append('<table id="file-list" class="table table-hover">')
-
-        r.append("<tr><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>")
-        for f in folderList:
-            r.append(self.getFolder(subfolder, f))
-
-        for f in fileList:
-            r.append(self.getFile(folder, subfolder, f))
-        r.append('</table>')
-
-        r.append('</div>')
-        r.append('</div>')
-        r.append('</form>')
-        r.append('<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>')
-        r.append('<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>')
-        r.append('<script src="/~/js/jquery.swipebox.min.js"></script>')
-        r.append('<script type="text/javascript">')
-        r.append('window.imageArray = [')
-        r.append("\n{href:'/" + subfolder + "/" + imgList[0] + "', title:'" + imgList[0] + "'}")
-        for i in imgList[1:]:
-            r.append(",\n{href:'/" + subfolder + "/" + i.replace("'", "&#39;") + "', title:'" + i.replace("'", "&#39;") + "'}")
-        r.append('];')
-
-        r.append('hideBarsDelay = ' + str(hideBarsDelay) + ';')
-        r.append('</script>')
-        r.append('<script src="/~/js/eyebrows.js"></script>')
-        r.append('</body>')
-        r.append('</html>')
-        r = '\n'.join(r)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -177,41 +119,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
 
-    ## Returns a string of HTML for a file entry
-    def getFile(self, folder, subfolder, name):
-        derp, ext = os.path.splitext(name)
-        ext = ext[1:].lower()
-        if ext in fileIcons and fileIcons[ext] == "picture-o":
-            imgList.append(name)
-
-        link = "/".join([subfolder, name])
-        if subfolder == "":
-            link = name
-        urllib.parse.quote(link)
-        return "<tr><td><input type='checkbox' class='chk' name='items' value='" + name.replace("'", "&#39;") + "'></td>" + \
-               "<td><i class='fa fa-" + (fileIcons[ext] if ext in fileIcons else "file-o") + "'></i></td>" + \
-               "<td><a href='" + link + "'" + \
-               (" class='img-file'" if ext in fileIcons else "") + ">" + name.replace("'", "&#39;") + "</a></td>" + \
-               "<td><small>" + formatBytes(os.path.getsize(os.path.join(folder, name))) + "</small></td>" + \
-               "<td><small>" + time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name)))) + "</small></td></tr>"
-
-    ## Returns a string of HTML for a folder entry
-    def getFolder(self, subfolder, name):
-        link = "/".join([subfolder, name])
-        if subfolder == "":
-            link = name
-        return "<tr><td><input type='checkbox' class='chk' name='items' value='" + name.replace("'", "&#39;") + "'></td><td><i class='fa fa-folder'></i></td>" + \
-               "<td><a href='/" + link + "'>" + name + "</a></td><td></td><td></td></tr>"
-
-    ## 404
-    def notFound(self, folder):
-        r = "Nope"
-        self.send_response(404)
-        self.send_header("Content-type", "text/html;charset=utf-8")
-        self.send_header("Content-length", len(r))
-        self.end_headers()
-        self.wfile.write(r.encode("utf-8"))
-        self.wfile.flush()
+        return
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
@@ -253,26 +161,15 @@ class MyHandler(SimpleHTTPRequestHandler):
         for f in folderList:
             self._packFolder(z, subfolder, os.path.join(target, f))
 
-    ## Not used, currently; kept around because I'm not confident in downloadZip
-    def downloadZip2(self, subfolder, files):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/zip')
-        self.send_header('Content-Disposition', 'attachment; filename="%s"' % ((subfolder if subfolder != "" else "Home") + ".zip"))
+    ## 404
+    def notFound(self, folder):
+        r = "Nope"
+        self.send_response(404)
+        self.send_header("Content-type", "text/html;charset=utf-8")
+        self.send_header("Content-length", len(r))
         self.end_headers()
-        with zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED) as z:
-            for f in files:
-                fullpath = os.path.join(baseFolder, subfolder, f)
-                if os.path.isdir(fullpath):
-                    self._packFolder(z, subfolder, f)
-                else:
-                    z.write(fullpath, f)
-            with open('test.zip', 'wb') as f:
-                for chunk in z:
-                    f.write(chunk)
-        with open('test.zip', 'rb') as fi:
-            self.wfile.write(fi.read())
-            self.wfile.flush()
-
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
 
 
 ### Basically a HTTPServer with SSL ###
@@ -287,15 +184,6 @@ class SecureHTTPServer(HTTPServer):
         self.server_bind()
         self.server_activate()
 
-
-## Formats a string of bytes
-def formatBytes(inputInt):
-    suffixes = ["", "K", "M", "G", "T"]
-    i = 0
-    while inputInt > 2000:
-        inputInt /= 1024.0
-        i += 1
-    return "{0:.2f}".format(inputInt) + " " + suffixes[i] + "B"
 
 try:
     server_address = ('0.0.0.0', port)

@@ -35,6 +35,7 @@ Also I wanted to write something simple in Python.
 ----------------
 
   * [Python 3.3.3](http://www.python.org/)
+  * [Mako 0.9.1](http://www.makotemplates.org/)
   * [ZipStream 859532](https://github.com/allanlei/python-zipstream/tree/859532b05844a0eb3efd641303a08d4424edb30e)
   * [Bootstrap 3.0.3](http://getbootstrap.com/)
   * [FontAwesome 4.0.3](http://fontawesome.io/)
@@ -51,6 +52,8 @@ All licenses can be found in the "licenses" directory
 Eyebrows itself is released under the BSD license.
 
 Other components are licensed as followed:
+  * Python: PSF
+  * Mako: MIT
   * ZipStream: GPLv3
   * Bootstrap: MIT
   * FontAwesome: OFL & MIT
