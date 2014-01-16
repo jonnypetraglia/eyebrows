@@ -2,10 +2,11 @@
 from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
 import urllib.parse
-# SSL
+# SSL/authentication
 from socketserver import BaseServer
 import socket
 import ssl
+import base64
 # Used for zip file generation
 from zipstream import zipstream
 # Misc
@@ -19,6 +20,7 @@ from config import *
 # Temp variables that are automatically set. DO NOT TOUCH
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
+authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
 maintemplate = Template(filename='main.html')
 
 
@@ -27,8 +29,18 @@ class MyHandler(SimpleHTTPRequestHandler):
     def __init__(self, req, client_addr, server):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
+    def send_401(self):
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm=\"Log in\"')
+        self.end_headers()
+
     ## Handle Get requests
     def do_GET(self):
+        if self.headers.get('Authorization'):
+            print("Attempted login: " + base64.b64decode(self.headers.get('Authorization')[len("Basic "):]).decode("utf-8"))
+        if password and self.headers.get('Authorization') != authstring:
+            return self.send_401()  # authorization required
+
         theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
         parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         pathVar = os.path.join(baseFolder, theArg)
@@ -110,15 +122,12 @@ class MyHandler(SimpleHTTPRequestHandler):
                                 hideBarsDelay=hideBarsDelay,
                                 fileIcons=fileIcons,
                                 baseFolder=baseFolder)
-        print(r)
-
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
         self.end_headers()
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
-
         return
 
     ## Respond to POSTs; used for requesting zip files
