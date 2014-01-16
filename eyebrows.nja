@@ -21,7 +21,8 @@
     ".css", 
     ".json", 
     ".js", 
-    ".ini"
+    ".ini", 
+    ".md"
   ], 
   "project-type": "", 
   "postExecScript": "", 
