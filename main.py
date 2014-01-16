@@ -61,7 +61,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         print("Resourcing: " + relPath)
         f = open(os.path.normpath(relPath), 'rb')
         self.send_response(200)
-        self.send_header('Content-type', 'text/html;charset=utf-8')
+
         dat = f.read()
         self.send_header("Content-length", len(dat))
         if protocol == "HTTP/1.1":
