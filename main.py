@@ -7,11 +7,13 @@ from socketserver import BaseServer
 import socket
 import ssl
 import base64
-# Used for zip file generation
-from zipstream import zipstream
 # Misc
 import os
+import sys
 from mako.template import Template
+# Used for zip file generation
+sys.path.insert(0, "zipstream")
+import zipstream
 # Project files
 from icontypes import fileIcons
 from utils import *
@@ -54,7 +56,8 @@ class MyHandler(SimpleHTTPRequestHandler):
     ## Handle Get requests
     def do_GET(self):
         if self.headers.get('Authorization'):
-            print("Attempted login: " + base64.b64decode(self.headers.get('Authorization')[len("Basic "):]).decode("utf-8"))
+            token = self.headers.get('Authorization')[len("Basic "):]
+            print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
         if password and self.headers.get('Authorization') != authstring:
             return self.send_401()  # authorization required
 
