@@ -127,7 +127,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         link_dest = os.path.dirname(subfolder) if subfolder else ""
         page_title = os.path.basename(subfolder)
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase:]
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase+1:]
 
         folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
         fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
