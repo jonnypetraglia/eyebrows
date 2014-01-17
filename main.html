@@ -56,10 +56,10 @@
         window.imageArray = [
 
             % if len(imgList) > 0:
-                {href:'/${subfolder}/${imgList[0]}', title:'${imgList[0]}'}
+                {href:'${"/" + subfolder if subfolder else ""}/${imgList[0]}', title:'${imgList[0]}'}
             % endif
             % for i in imgList[1:]:
-                ,{href:'/${subfolder}/${i.replace("'", "&#39;")}', title:'${i.replace("'", "&#39;")}'}
+                ,{href:'${"/" + subfolder if subfolder else ""}/${i.replace("'", "&#39;")}', title:'${i.replace("'", "&#39;")}'}
             % endfor
 
         ];
