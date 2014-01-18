@@ -17,13 +17,24 @@
     margin-left:5px;
 }
 
+.breadcrumb {
+    font-size: 1.2em;
+}
+
+#up-button {
+    margin-right:5px;
+}
+
 @media screen and (min-width: 0px) and (max-width: 720px) {
-  .mobile-hide{ display: none; }
-  .breadcrumb {margin-left: 0.5em; margin-right: 0.5em;}
-  .container {
+    .mobile-hide{ display: none; }
+    .breadcrumb {
+        font-size: 1.5em;
+
+    }
+    .container {
         padding-left: 0px;
         padding-right: 0px;
-  }
+    }
 }
 
 #logo-text {
@@ -32,13 +43,19 @@
 
 
 li.alert-success {
-  background-color: #DFF0D8;
+    background-color: #DFF0D8;
 }
 
 li.alert-error {
-  background-color: #F2DEDE;
+    background-color: #F2DEDE;
 }
 
 .alert-error .qq-upload-failed-text {
-  display: inline;
+    display: inline;
+}
+
+@media (min-width: 768px) {
+    .affix {
+        position: fixed;
+    }
 }
