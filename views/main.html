@@ -4,7 +4,7 @@
             <div class="col-sm-12">
                 <table id="file-list" class="table table-hover">
                     <thead>
-                    <tr class="hidden-xs hidden-sm"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+                    <tr class="mobile-hide"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
                     </thead>
                     <tbody data-link="row" >
 
@@ -44,20 +44,20 @@
 
 <%def name="doDots()">
     <tr>
-        <td class="icon-and-checkbox hidden-xs hidden-sm"></td>
+        <td class="icon-and-checkbox mobile-hide"></td>
         <td class="icon-and-checkbox"></td>
         <td>
             <a href='/${up_level}'>..</a>
         </td>
-        <td class="hidden-xs hidden-sm"></td>
-        <td class="hidden-xs hidden-sm"></td>
+        <td class="mobile-hide"></td>
+        <td class="mobile-hide"></td>
     </tr>
 </%def>
 
 
 <%def name="doFolder(name)">
     <tr class='clickableRow'>
-        <td class="icon-and-checkbox hidden-xs hidden-sm">
+        <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>
         <td class="icon-and-checkbox">
@@ -66,8 +66,8 @@
         <td>
             <a href='/${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
         </td>
-        <td class="hidden-xs hidden-sm"></td>
-        <td class="hidden-xs hidden-sm"></td>
+        <td class="mobile-hide"></td>
+        <td class="mobile-hide"></td>
     </tr>
 </%def>
 
@@ -95,21 +95,21 @@
         urllib.parse.quote(link)
     %>
     <tr class='clickableRow'>
-        <td class="hidden-xs hidden-sm">
+        <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>
-        <td>
+        <td class="icon-and-checkbox">
             <i class='fa fa-${fileIcons[ext] if ext in fileIcons else "file-o"}'></i>
         </td>
         <td>
-            <a href='${link}' ${imgclass}>${name.replace("'", "&#39;")}</a>
+            <a href='/${link}' ${imgclass}>${name.replace("'", "&#39;")}</a>
         </td>
-        <td class="hidden-xs hidden-sm">
+        <td class="mobile-hide">
             <small>
                 ${formatBytes(os.path.getsize(os.path.join(folder, name)))}
             </small>
         </td>
-        <td class="hidden-xs hidden-sm">
+        <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
             </small>
