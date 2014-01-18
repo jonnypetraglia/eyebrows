@@ -22,6 +22,7 @@ Dude I don't even know about config yet. So far here is what you can do:
   * username = for authentication
   * password = for authentication
   * ignoreHidden = whether or not to ignore hidden files
+  * useDots = if you want to use the traditional ".." to navigate to the parent directory instead of the up button
 
 
 2. Why?
@@ -42,6 +43,7 @@ Also I wanted to write something simple in Python.
   * [ZipStream 859532](https://github.com/allanlei/python-zipstream/tree/859532b05844a0eb3efd641303a08d4424edb30e)
   * [FineUploader 4.2](http://fineuploader.com/)
   * [Bootstrap 3.0.3](http://getbootstrap.com/)
+  * [Bootstrap Rowlink 3.0.1-p7](http://jasny.github.io/bootstrap/javascript/#rowlink)
   * [FontAwesome 4.0.3](http://fontawesome.io/)
   * [Swipebox 4e8338](https://github.com/brutaldesign/swipebox/tree/4e8338ec2740ca75eb8a39247c275f1a1b3d7539)
   * [Sala de Fiest font](http://openfontlibrary.org/en/font/sala-de-fiesta)
@@ -64,6 +66,7 @@ Other components are licensed as followed:
   * ZipStream: GPLv3
   * FineUploader: GPLv3
   * Bootstrap: MIT
+  * Bootstrap Rowlink: Apache 2.0
   * FontAwesome: OFL & MIT
   * Swipebox: MIT
   * Sala de Fiesta: MIT:

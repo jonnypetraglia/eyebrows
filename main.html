@@ -5,37 +5,46 @@
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
     <link href="/~/css/swipebox.css" rel="stylesheet">
     <link href="/~/css/eyebrow.css" rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     % if page_title != "":
-        <title>${page_title} - Eyebrows</title>
+    <title>${page_title} - Eyebrows</title>
     % else:
-        <title>Eyebrows</title>
+    <title>Eyebrows</title>
     % endif
-
 </head>
 <body>
-    <form role="form" method="post" action="/~">
-        <input type="hidden" name="subfolder" value="${subfolder}">
-        <header class="container"><h1 class="col-sm-12" id="content"><img src="/~/img/logo-long.png" /></h1></header>
+    <div class="container">
+        <form role="form" method="post" action="/~">
+            <input type="hidden" name="subfolder" value="${subfolder}">
+            <h1 id="content"><img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" /></h1>
 
-        <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
-            <ol class="breadcrumb container">
-                <a class="btn btn-default" href="${link_dest}" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>
-                <li><a href="/">Home</a></li>
+            <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
+                <ol class="breadcrumb container">
+                    % if not useDots:
+                    <a class="btn btn-default" href="/${up_level}" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>
+                    % endif
+                    <li><a href="/">Home</a></li>
 
-                % for f in nav_folders:
-                    <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
-                % endfor
+                    % for f in nav_folders:
+                        <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
+                    % endfor
 
-                <a class="btn btn-default pull-right" title="Upload" href="?u=1"><i class="fa fa-upload"></i></a>
-                <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
-            </ol>
-        </nav>
+                    <a class="btn btn-default pull-right" title="Upload" href="?u=1"><i class="fa fa-upload"></i></a>
+                    <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
+                </ol>
+            </nav>
 
-        <div class="container">
-            <div class="col-sm-12">
+
+
             <table id="file-list" class="table table-hover">
-                <tr><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+                <thead>
+                <tr class="hidden-xs hidden-sm"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+                </thead>
+                <tbody data-link="row" class="rowlink">
+
+                % if useDots:
+                    ${doDots()}
+                % endif
 
                 % for f in folderList:
                     ${doFolder(f)}
@@ -44,14 +53,14 @@
                     ${doFile(f)}
                 % endfor
 
+                </tbody>
             </table>
-
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
     <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
     <script src="/~/js/jquery.swipebox.min.js"></script>
+    <script src="/~/js/rowlink.js"></script>
     <script type="text/javascript">
         window.imageArray = [
 
@@ -69,10 +78,22 @@
 </body>
 </html>
 
+<%def name="doDots()">
+    <tr>
+        <td class="hidden-xs hidden-sm"></td>
+        <td></td>
+        <td>
+            <a href='/${up_level}'>..</a>
+        </td>
+        <td class="hidden-xs hidden-sm"></td>
+        <td class="hidden-xs hidden-sm"></td>
+    </tr>
+</%def>
+
 
 <%def name="doFolder(name)">
     <tr>
-        <td>
+        <td class="hidden-xs hidden-sm">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>
         <td>
@@ -81,8 +102,8 @@
         <td>
             <a href='/${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
         </td>
-        <td></td>
-        <td></td>
+        <td class="hidden-xs hidden-sm"></td>
+        <td class="hidden-xs hidden-sm"></td>
     </tr>
 </%def>
 
@@ -110,7 +131,7 @@
         urllib.parse.quote(link)
     %>
     <tr>
-        <td>
+        <td class="hidden-xs hidden-sm">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>
         <td>
@@ -119,12 +140,12 @@
         <td>
             <a href='${link}' ${imgclass}>${name.replace("'", "&#39;")}</a>
         </td>
-        <td>
+        <td class="hidden-xs hidden-sm">
             <small>
                 ${formatBytes(os.path.getsize(os.path.join(folder, name)))}
             </small>
         </td>
-        <td>
+        <td class="hidden-xs hidden-sm">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
             </small>

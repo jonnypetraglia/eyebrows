@@ -1,5 +1,6 @@
 $(window).load(function() {
-    console.log($(".img-file"));
+    $('tbody.rowlink').rowlink();
+
     $(function($) {
         $(".swipebox").swipebox();
     });

@@ -28,6 +28,7 @@ useSSL = True
 username = "admin"
 password = "admin"
 ignoreHidden = False
+useDots = False
 from config import *
 
 if os.name == 'nt':
@@ -132,7 +133,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             print("Found a symlink")
             folder = os.path.realpath(folder)
 
-        link_dest = os.path.dirname(subfolder) if subfolder else ""
+        up_level = os.path.dirname(subfolder) if subfolder else ""
         page_title = os.path.basename(subfolder)
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
@@ -140,7 +141,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
 
         r = maintemplate.render(subfolder=subfolder,
-                                link_dest=link_dest,
+                                up_level=up_level,
                                 page_title=page_title,
                                 nav_folders=nav_folders,
                                 folderList=folderList,
@@ -148,7 +149,8 @@ class MyHandler(SimpleHTTPRequestHandler):
                                 imgList=imgList,
                                 hideBarsDelay=hideBarsDelay,
                                 fileIcons=fileIcons,
-                                baseFolder=baseFolder)
+                                baseFolder=baseFolder,
+                                useDots=useDots)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -169,9 +171,11 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.uploadFile()
 
     def uploadFile(self):
+        print("Ok uploading file")
         ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+        print("Parsed header")
         attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
-        print(attrs)
+        print("Parsed multipart")
         subfolder = self.path[1:]
         dest = os.path.join(baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
         chunked = False
@@ -226,13 +230,14 @@ class MyHandler(SimpleHTTPRequestHandler):
     def showUpload(self, subfolder):
         folder = os.path.join(baseFolder, subfolder)
 
-        link_dest = os.path.dirname(subfolder) if subfolder else ""
+        up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         r = uptemplate.render(subfolder=subfolder,
-                              link_dest=link_dest,
+                              up_level=up_level,
                               nav_folders=nav_folders,
-                              baseFolder=baseFolder)
+                              baseFolder=baseFolder,
+                              useDots=useDots)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))

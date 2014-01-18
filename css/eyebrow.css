@@ -16,3 +16,29 @@
 #dl-button {
     margin-left:5px;
 }
+
+@media screen and (min-width: 0px) and (max-width: 720px) {
+  .mobile-hide{ display: none; }
+  .breadcrumb {margin-left: 0.5em; margin-right: 0.5em;}
+  .container {
+        padding-left: 0px;
+        padding-right: 0px;
+  }
+}
+
+#logo-text {
+    margin-left:0.5em;
+}
+
+
+li.alert-success {
+  background-color: #DFF0D8;
+}
+
+li.alert-error {
+  background-color: #F2DEDE;
+}
+
+.alert-error .qq-upload-failed-text {
+  display: inline;
+}
