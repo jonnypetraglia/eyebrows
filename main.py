@@ -13,6 +13,7 @@ import shutil
 import sys
 import cgi
 from mako.template import Template
+from mako.lookup import TemplateLookup
 # Used for zip file generation
 sys.path.insert(0, "zipstream")
 import zipstream
@@ -43,8 +44,8 @@ if os.name == 'nt':
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
 authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
-maintemplate = Template(filename='main.html')
-uptemplate = Template(filename='upload.html')
+maintemplate = Template(filename='views/main.html', lookup=TemplateLookup(directories=['views/']))
+uptemplate = Template(filename='views/upload.html', lookup=TemplateLookup(directories=['views/']))
 chunk_dir = "chunks"
 
 
@@ -237,7 +238,8 @@ class MyHandler(SimpleHTTPRequestHandler):
                               up_level=up_level,
                               nav_folders=nav_folders,
                               baseFolder=baseFolder,
-                              useDots=useDots)
+                              useDots=useDots,
+                              page_title="Upload")
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))

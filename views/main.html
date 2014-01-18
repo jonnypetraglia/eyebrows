@@ -1,47 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
-<head>
-    <link rel="icon" type="image/x-icon" href="/~/img/favicon.ico" />
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-    <link href="/~/css/swipebox.css" rel="stylesheet">
-    <link href="/~/css/eyebrow.css" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    % if page_title != "":
-    <title>${page_title} - Eyebrows</title>
-    % else:
-    <title>Eyebrows</title>
-    % endif
-</head>
-<body>
-    <div class="container">
-        <form role="form" method="post" action="/~">
-            <input type="hidden" name="subfolder" value="${subfolder}">
-            <h1><img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" /></h1>
-
-            <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
-                <ol class="breadcrumb">
-                    % if not useDots:
-                    <a class="btn btn-default pull-left icon-button" id="up-button" href="/${up_level}" title="Up a Level"></span><i class="fa fa-level-up fa-flip-horizontal"></i>&zwnj;</a>
-                    % endif
-                    <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
-                    <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
-
-                    <li><a href="/">Home</a></li>
-                    % for f in nav_folders:
-                    <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
-                    % endfor
-
-                    <div id="mobile-nav-container">
-                        % if len(nav_folders) > 0:
-                            <a id="mobile-nav" class="mobile-only" href="/${'/'.join(nav_folders[:len(nav_folders)])}">${nav_folders[-1]}</a>
-                        % else:
-                            <a id="mobile-nav" class="mobile-only" href="/">Home</a>
-                        % endif
-                    </div>
-                </ol>
-            </nav>
-
-
+<%include file="/header.html", args="cssFiles=['swipebox'] "/>
 
             <table id="file-list" class="table table-hover">
                 <thead>
@@ -64,9 +21,6 @@
             </table>
         </form>
     </div>
-    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
-    <script src="/~/js/jquery.swipebox.min.js"></script>
     <script type="text/javascript">
         window.imageArray = [
 
@@ -80,9 +34,11 @@
         ];
         hideBarsDelay = ${str(hideBarsDelay)};
     </script>
-    <script src="/~/js/eyebrows.js"></script>
+
+<%include file="/footer.html", args="jsFiles=['jquery.swipebox.min']" />
 </body>
 </html>
+
 
 <%def name="doDots()">
     <tr>

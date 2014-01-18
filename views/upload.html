@@ -1,52 +1,7 @@
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
-<head>
-    <link rel="icon" type="image/x-icon" href="/~/img/favicon.ico" />
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-    <link href="/~/css/fineuploader-4.2.1.css" rel="stylesheet">
-    <link href="/~/css/eyebrow.css" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<%include file="/header.html", args="cssFiles=['fineuploader-4.2.1'] "/>
 
-    <title>Upload - Eyebrows</title>
-
-
-
-</head>
-<body>
-    <div class="container">
-        <form role="form" method="post" action="/">
-            <input type="hidden" name="subfolder" value="${subfolder}">
-            <h1 id="content"><img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" /></h1>
-
-            <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
-                <ol class="breadcrumb">
-
-                    <a class="btn btn-default pull-left" id="up-button" href="/${up_level}" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i>&zwnj;</a>
-
-                    <a class="btn btn-default pull-right" title="Finish" href="${subfolder}">Finish</a>
-
-
-                    <li><a href="/">Home</a></li>
-                    % for f in nav_folders:
-                    <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
-                    % endfor
-
-                    <div id="mobile-nav-container">
-                        % if len(nav_folders) > 0:
-                            <a id="mobile-nav" class="mobile-only" href="/${'/'.join(nav_folders[:len(nav_folders)])}">${nav_folders[-1]}</a>
-                        % else:
-                            <a id="mobile-nav" class="mobile-only" href="/">Home</a>
-                        % endif
-                    </div>
-                </ol>
-            </nav>
-
-            <!-- Fine Uploader DOM Element
-            ====================================================================== -->
             <div id="bootstrapped-fine-uploader"></div>
 
-            <!-- Fine Uploader template
-            ====================================================================== -->
             <script type="text/template" id="qq-template-bootstrap">
               <div class="qq-uploader-selector qq-uploader span12">
                 <ul class="qq-upload-list-selector qq-upload-list panel panel-default" style="margin-top: 10px; text-align: center;">
@@ -77,9 +32,6 @@
             </script>
         </form>
     </div>
-    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
-    <script src="/~/js/jquery.fineuploader-4.2.1.js"></script>
     <script>
       $(document).ready(function() {
         var uploader = $("#bootstrapped-fine-uploader").fineUploader({
@@ -95,6 +47,7 @@
         });
       });
     </script>
-    <script src="/~/js/eyebrows.js"></script>
+
+<%include file="/footer.html", args="jsFiles=['jquery.fineuploader-4.2.1']" />
 </body>
 </html>
