@@ -33,13 +33,14 @@ password = "admin"
 ignoreHidden = False
 useDots = False
 from config import *
+baseFolder = os.path.normpath(baseFolder)
 
 # Variables that are automatically set. DO NOT TOUCH
 __version__ = 1.0
-depVersions = {"python": sys.version,
+depVersions = {"python": ".".join(str(x) for x in sys.version_info[0:3]),
                "mako": mako.__version__,
                "zipstream": zipstream.__version__,
-               "fineuploader": "100",
+               "fineuploader": "4.2.1",
                "jquery": "1.10.2",
                "bootstrap": "3.0.3",
                "fontawesome": "4.0.3",
@@ -49,7 +50,7 @@ if os.name == 'nt':
     try:
         import win32api
         import win32con
-        depVersion["pywin32"] = win32api.GetFileVersionInfo(win32api.__file__, "\\")['FileVersionLS'] >> 16
+        depVersions["pywin32"] = win32api.GetFileVersionInfo(win32api.__file__, "\\")['FileVersionLS'] >> 16
     except ImportError:
         ignoreHidden = False
 
@@ -326,13 +327,10 @@ class MyHandler(SimpleHTTPRequestHandler):
                                 version=__version__,
                                 # Sys info
                                 depVersions=depVersions,
-                                # Connection info
-                                server=httpd.server_name,
-                                # Connection info / config
+                                # Config
                                 port=port,
                                 useSSL=useSSL,
                                 protocol=protocol,
-                                # Config
                                 baseFolder=baseFolder,
                                 hideBarsDelay=hideBarsDelay,
                                 username=username,

@@ -1,16 +1,45 @@
-<%include file="/header.html", args="cssFiles=[]"/>
+<%include file="/header.html", args="cssFiles=['info']"/>
 
         <div class="container">
             <div class="col-sm-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3>Eyebrows version ${version}</h3>
+                <div class="page-header">
+                  <h1>Eyebrow version ${version}</h1>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">System Info</h3>
+                            </div>
+                            <div class="panel-body">
+                                % for x in ["Python", "Mako", "ZipStream", "FineUploader", "jQuery", "Bootstrap", "FontAwesome", "Swipebox"]:
+                                    <div class="input-group input-group-lg version-info">
+                                      <input class="form-control" type="text" disabled value="${x}">
+                                      <span class="input-group-addon version-field">v${dep[x.lower()]}</span>
+                                    </div>
+                                    <br/>
+                                % endfor
+                            </div>
+                        </div>
                     </div>
-                    <div class="panel-body">
-                        Panel content
+                    <div class="col-sm-8">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Configuration</h3>
+                            </div>
+                            <div class="panel-body">
+                                % for x in ["port", "useSSL", "protocol", "baseFolder", "hideBarsDelay", "username", "password", "ignoreHidden", "useDots"]:
+                                    <div class="input-group input-group-sm config-info">
+                                      <input class="form-control" type="text" disabled value="${x}">
+                                      <span class="input-group-addon">${locals()['pageargs'][x]}</span>
+                                    </div>
+                                    <br/>
+                                % endfor
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <a href="#" onclick="window.history.back();" class="btn btn-default">Back</a>
+                <a href="#" onclick="window.history.back();" class="btn btn-lg btn-primary btn-block ">Back</a>
             </div>
         </div>
     <%include file="/footer.html", args="jsFiles=[]" />

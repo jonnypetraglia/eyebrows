@@ -1,0 +1,17 @@
+.form-control[disabled], .form-control[readonly] {
+    cursor:default;
+    background:white;
+}
+
+.version-info {
+    width: 20em;
+}
+
+.version-field {
+    width: 3.2em;
+}
+
+.config-info {
+    width: 100%;
+}
+
