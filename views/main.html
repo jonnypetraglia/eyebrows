@@ -1,26 +1,30 @@
 <%include file="/header.html", args="cssFiles=['swipebox'] "/>
 
-            <table id="file-list" class="table table-hover">
-                <thead>
-                <tr class="hidden-xs hidden-sm"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
-                </thead>
-                <tbody data-link="row" >
+        <div class="container">
+            <div class="col-sm-12">
+                <table id="file-list" class="table table-hover">
+                    <thead>
+                    <tr class="hidden-xs hidden-sm"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+                    </thead>
+                    <tbody data-link="row" >
 
-                % if useDots:
-                    ${doDots()}
-                % endif
+                    % if useDots:
+                        ${doDots()}
+                    % endif
 
-                % for f in folderList:
-                    ${doFolder(f)}
-                % endfor
-                % for f in fileList:
-                    ${doFile(f)}
-                % endfor
+                    % for f in folderList:
+                        ${doFolder(f)}
+                    % endfor
+                    % for f in fileList:
+                        ${doFile(f)}
+                    % endfor
 
-                </tbody>
-            </table>
-        </form>
-    </div>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+    <%include file="/footer.html", args="jsFiles=['jquery.swipebox.min']" />
     <script type="text/javascript">
         window.imageArray = [
 
@@ -34,8 +38,6 @@
         ];
         hideBarsDelay = ${str(hideBarsDelay)};
     </script>
-
-<%include file="/footer.html", args="jsFiles=['jquery.swipebox.min']" />
 </body>
 </html>
 
