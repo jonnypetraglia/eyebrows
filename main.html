@@ -14,7 +14,7 @@
 
 </head>
 <body>
-    <form role="form" method="post" action="/">
+    <form role="form" method="post" action="/~">
         <input type="hidden" name="subfolder" value="${subfolder}">
         <header class="container"><h1 class="col-sm-12" id="content"><img src="/~/img/logo-long.png" /></h1></header>
 
@@ -27,7 +27,7 @@
                     <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
                 % endfor
 
-                <a class="btn btn-default pull-right" title="Upload"><i class="fa fa-upload"></i></a>
+                <a class="btn btn-default pull-right" title="Upload" href="?u=1"><i class="fa fa-upload"></i></a>
                 <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
             </ol>
         </nav>

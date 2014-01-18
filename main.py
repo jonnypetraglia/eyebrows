@@ -9,7 +9,9 @@ import ssl
 import base64
 # Misc
 import os
+import shutil
 import sys
+import cgi
 from mako.template import Template
 # Used for zip file generation
 sys.path.insert(0, "zipstream")
@@ -41,6 +43,8 @@ numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
 authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
 maintemplate = Template(filename='main.html')
+uptemplate = Template(filename='upload.html')
+chunk_dir = "chunks"
 
 
 ### Main class that handles everything ###
@@ -72,7 +76,10 @@ class MyHandler(SimpleHTTPRequestHandler):
             return self.notFound(theArg)
         # Handle the file or folder
         if os.path.isdir(pathVar):
-            self.doFolder(theArg)
+            if "u" in parameters and parameters["u"]:
+                self.showUpload(theArg)
+            else:
+                self.doFolder(theArg)
         if os.path.isfile(pathVar):
             self.downloadFile(theArg, parameters)
 
@@ -127,7 +134,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         link_dest = os.path.dirname(subfolder) if subfolder else ""
         page_title = os.path.basename(subfolder)
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase+1:]
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
         fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
@@ -152,11 +159,87 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
-        length = int(self.headers['Content-Length'])
-        post_data = urllib.parse.parse_qs(self.rfile.read(length).decode('utf-8'))
-        print("Posted: ")
-        print(post_data)
-        self.downloadZip(post_data['subfolder'][0] if 'subfolder' in post_data else "", post_data['items'])
+        print("Posted: " + self.path)
+        print(self.headers)
+        if self.path == "/~":
+            post_data = urllib.parse.parse_qs(self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8'))
+            print(post_data)
+            self.downloadZip(post_data['subfolder'][0] if 'subfolder' in post_data else "", post_data['items'])
+        else:
+            self.uploadFile()
+
+    def uploadFile(self):
+        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+        attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
+        print(attrs)
+        subfolder = self.path[1:]
+        dest = os.path.join(baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
+        chunked = False
+        print("Uploading file to " + dest)
+        if os.path.exists(dest):
+            r = '{"error": "File exists", "preventRetry": true}'
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain;charset=utf-8")
+            self.send_header("Content-length", len(r))
+            self.end_headers()
+            self.wfile.write(r.encode("utf-8"))
+            self.wfile.flush()
+        else:
+            r = '{"success": true}'
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain;charset=utf-8")
+            self.send_header("Content-length", len(r))
+            self.end_headers()
+            self.wfile.write(r.encode("utf-8"))
+            self.wfile.flush()
+        # Begin section copied from fine-uploader-server (slightly modified)
+        if 'qqtotalparts' in attrs and int(attrs['qqtotalparts'][0]) > 1:
+            chunked = True
+            dest_folder = os.path.join(chunk_dir, attrs['qquuid'][0])
+            dest = os.path.join(dest_folder, attrs['qqfilename'][0], str(attrs['qqpartindex'][0]))
+            # save dat file
+        if not os.path.exists(os.path.dirname(dest)):
+            os.makedirs(os.path.dirname(dest))
+        with open(dest, 'wb+') as destination:
+            destination.write(attrs['qqfile'][0])
+            # chunked
+        if chunked and (int(attrs['qqtotalparts'][0]) - 1 == int(attrs['qqpartindex'][0])):
+            combine_chunks(attrs['qqtotalparts'][0],
+                attrs['qqtotalfilesize'][0],
+                source_folder=os.path.dirname(dest),
+                dest=os.path.join(app.config['UPLOAD_DIRECTORY'], attrs['qquuid'][0],
+                    attrs['qqfilename'][0]))
+            shutil.rmtree(os.path.dirname(os.path.dirname(dest)))
+        # End section copied from fine-uploader-server
+
+    # Copied from fine-uploader-server (slightly modified)
+    def combine_chunks(total_parts, total_size, source_folder, dest):
+        if not os.path.exists(os.path.dirname(dest)):
+            os.makedirs(os.path.dirname(dest))
+        with open(dest, 'wb+') as destination:
+            for i in xrange(int(total_parts)):
+                part = os.path.join(source_folder, str(i))
+                with open(part, 'rb') as source:
+                    destination.write(source.read())
+
+    # Show upload page
+    def showUpload(self, subfolder):
+        folder = os.path.join(baseFolder, subfolder)
+
+        link_dest = os.path.dirname(subfolder) if subfolder else ""
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+
+        r = uptemplate.render(subfolder=subfolder,
+                              link_dest=link_dest,
+                              nav_folders=nav_folders,
+                              baseFolder=baseFolder)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html;charset=utf-8")
+        self.send_header("Content-length", len(r))
+        self.end_headers()
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
+        return
 
     ## Download a zip file
     def downloadZip(self, subfolder, files):
@@ -172,10 +255,9 @@ class MyHandler(SimpleHTTPRequestHandler):
                     self._packFolder(z, subfolder, f)
                 else:
                     z.write(fullpath, f)
-            with open('test.zip', 'wb') as f:
-                for chunk in z:
-                    if chunk:
-                        self.wfile.write(chunk)
+            for chunk in z:
+                if chunk:
+                    self.wfile.write(chunk)
         self.wfile.flush()
 
     ## Packs a folder inside the ZIP; is recursive

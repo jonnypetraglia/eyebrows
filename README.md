@@ -40,6 +40,7 @@ Also I wanted to write something simple in Python.
   * [Python 3.3.3](http://www.python.org/)
   * [Mako 0.9.1](http://www.makotemplates.org/)
   * [ZipStream 859532](https://github.com/allanlei/python-zipstream/tree/859532b05844a0eb3efd641303a08d4424edb30e)
+  * [FineUploader 4.2](http://fineuploader.com/)
   * [Bootstrap 3.0.3](http://getbootstrap.com/)
   * [FontAwesome 4.0.3](http://fontawesome.io/)
   * [Swipebox 4e8338](https://github.com/brutaldesign/swipebox/tree/4e8338ec2740ca75eb8a39247c275f1a1b3d7539)
@@ -61,6 +62,7 @@ Other components are licensed as followed:
   * Python: PSF
   * Mako: MIT
   * ZipStream: GPLv3
+  * FineUploader: GPLv3
   * Bootstrap: MIT
   * FontAwesome: OFL & MIT
   * Swipebox: MIT
