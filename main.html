@@ -16,21 +16,28 @@
     <div class="container">
         <form role="form" method="post" action="/~">
             <input type="hidden" name="subfolder" value="${subfolder}">
-            <h1 id="content"><img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" /></h1>
+            <h1><img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" /></h1>
 
             <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
-                <ol class="breadcrumb container">
+                <ol class="breadcrumb">
                     % if not useDots:
-                    <a class="btn btn-default pull-left" id="up-button" href="/${up_level}" title="Up a Level"><i class="fa fa-level-up fa-flip-horizontal"></i></a>
+                    <a class="btn btn-default pull-left icon-button" id="up-button" href="/${up_level}" title="Up a Level"></span><i class="fa fa-level-up fa-flip-horizontal"></i>&zwnj;</a>
                     % endif
-                    <li><a href="/">Home</a></li>
+                    <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
+                    <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
 
+                    <li><a href="/">Home</a></li>
                     % for f in nav_folders:
-                        <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
+                    <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
                     % endfor
 
-                    <a class="btn btn-default pull-right" title="Upload" href="?u=1"><i class="fa fa-upload"></i></a>
-                    <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
+                    <div id="mobile-nav-container">
+                        % if len(nav_folders) > 0:
+                            <a id="mobile-nav" class="mobile-only" href="/${'/'.join(nav_folders[:len(nav_folders)])}">${nav_folders[-1]}</a>
+                        % else:
+                            <a id="mobile-nav" class="mobile-only" href="/">Home</a>
+                        % endif
+                    </div>
                 </ol>
             </nav>
 
@@ -40,7 +47,7 @@
                 <thead>
                 <tr class="hidden-xs hidden-sm"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
                 </thead>
-                <tbody data-link="row" class="rowlink">
+                <tbody data-link="row" >
 
                 % if useDots:
                     ${doDots()}
@@ -60,7 +67,6 @@
     <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
     <script src="/~/js/jquery.swipebox.min.js"></script>
-    <script src="/~/js/rowlink.js"></script>
     <script type="text/javascript">
         window.imageArray = [
 
@@ -80,8 +86,8 @@
 
 <%def name="doDots()">
     <tr>
-        <td class="hidden-xs hidden-sm"></td>
-        <td></td>
+        <td class="icon-and-checkbox hidden-xs hidden-sm"></td>
+        <td class="icon-and-checkbox"></td>
         <td>
             <a href='/${up_level}'>..</a>
         </td>
@@ -92,11 +98,11 @@
 
 
 <%def name="doFolder(name)">
-    <tr>
-        <td class="hidden-xs hidden-sm">
+    <tr class='clickableRow'>
+        <td class="icon-and-checkbox hidden-xs hidden-sm">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>
-        <td>
+        <td class="icon-and-checkbox">
             <i class='fa fa-folder'></i>
         </td>
         <td>
@@ -130,7 +136,7 @@
             link = name
         urllib.parse.quote(link)
     %>
-    <tr>
+    <tr class='clickableRow'>
         <td class="hidden-xs hidden-sm">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
         </td>

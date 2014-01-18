@@ -1,6 +1,4 @@
 $(window).load(function() {
-    $('tbody.rowlink').rowlink();
-
     $(function($) {
         $(".swipebox").swipebox();
     });
@@ -21,13 +19,21 @@ $(window).load(function() {
         updateDownloadCount();
     });
 
-    $(".chk").click(function() {
+    $(".chk").click(function(event) {
         updateDownloadCount();
+        event.stopPropagation();
     });
 
     $("#dl-button").click(downloadChecked);
 
     updateDownloadCount();
+
+
+    $(".clickableRow").click(function() {
+        window.document.location = $($($(this).children()[2]).children()[0]).attr("href");
+    });
+
+    try {$('tbody.rowlink').rowlink(); } catch(e) {}
 });
 
 function updateDownloadCount() {
@@ -50,6 +56,6 @@ function downloadChecked() {
     $("input:checkbox:checked.chk").each(function(){
         console.log($(this).val());
     });
-//    with ZipFile('spam.zip', 'w') as myzip:
-//    myzip.write('eggs.txt')
 }
+
+

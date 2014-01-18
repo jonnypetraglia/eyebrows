@@ -1,39 +1,66 @@
-#header {
-    height: 45px;
-}
-
-#nav.affix {
+.affix {
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 10000;
 }
-		
-#nav.affix + #mainContent {
-    padding-top: 75px;	
+
+.breadcrumb {
+    font-size: 1.2em;
+    margin-bottom:0;
+    padding-top: 0.5em;
+    padding-bottom: 0.8em;
+}
+
+.breadcrumb > li {
+    margin-top: 3px;
 }
 
 #dl-button {
     margin-left:5px;
 }
 
-.breadcrumb {
-    font-size: 1.2em;
-}
-
 #up-button {
     margin-right:5px;
 }
 
-@media screen and (min-width: 0px) and (max-width: 720px) {
-    .mobile-hide{ display: none; }
-    .breadcrumb {
-        font-size: 1.5em;
+.mobile-only {
+    display: none;
+}
 
+#mobile-nav {
+    font-size: 1.5em;
+}
+
+.icon-and-checkbox {
+    width: 16px;
+}
+
+#mobile-nav-container {
+    width:100%;
+    text-align:center;
+}
+
+.clickableRow {
+    cursor:pointer;
+}
+
+@media screen and (min-width: 0px) and (max-width: 720px) {
+    .mobile-hide{
+        display: none;
     }
     .container {
         padding-left: 0px;
         padding-right: 0px;
+    }
+    .mobile-only {
+        display: inline;
+    }
+    .breadcrumb > li {
+        display: none;
+    }
+    .affix {
+        position: relative;
     }
 }
 
@@ -52,10 +79,4 @@ li.alert-error {
 
 .alert-error .qq-upload-failed-text {
     display: inline;
-}
-
-@media (min-width: 768px) {
-    .affix {
-        position: fixed;
-    }
 }
