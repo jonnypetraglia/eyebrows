@@ -1,9 +1,42 @@
 <%include file="/header.html", args="cssFiles=['info']"/>
 
+    <%
+        try:
+            with open(".git/HEAD", 'r') as file:
+                hash = file.read()
+            if hash.startswith("ref: "):
+                with open(".git/" + hash[len("ref: "):].strip()) as file:
+                    hash = file.read()
+        except:
+            hash = None
+    %>
+
         <div class="container">
             <div class="col-sm-12">
-                <div class="page-header">
-                  <h1>Eyebrow version ${version}</h1>
+                <div class="jumbotron">
+                    <img src="/~/img/logo-notext.png" class="pull-right" />
+                  <h1>
+                      Eyebrows v${version}
+                      % if hash:
+                            <a href="https://github.com/notbryant/eyebrows/commit/${hash}" class="btn btn-xs btn-default mobile-hide" style="margin-top:2em;" target="_blank">
+                                <span class="text-info">${hash[:12]}</span>
+                            </a>
+                      % endif
+                  </h1>
+                  <img src="/~/img/osi.png" class="pull-left mobile-hide">
+                  <p class="mobile-only">
+                      Released under the <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD 3-Clause License</a>.<br/>
+                      Beautifully open source.
+                  </p>
+                  <p id="info-buttons">
+                        <a class="btn btn-default btn-lg info-btn" href="http://www.qweex.com" target="_blank"><i class="fa fa-home"></i> Home</a>
+                        <a class="btn btn-default btn-lg info-btn" href="https://github.com/notbryant/eyebrows" target="_blank"><i class="fa fa-github"></i> Github</a>
+                        <a class="btn btn-default btn-lg info-btn" href="http://www.qweex.com/donate" target="_blank"><i class="fa fa-dollar"></i> Donate</a>
+                  </p>
+                  <p class="mobile-hide">
+                      Released under the <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD 3-Clause License</a>.<br/>
+                      Beautifully open source.
+                  </p>
                 </div>
                 <div class="row">
                     <div class="col-sm-4">
@@ -39,7 +72,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="#" onclick="window.history.back();" class="btn btn-lg btn-primary btn-block ">Back</a>
+                <a href="#" onclick="window.history.back();" class="btn btn-lg btn-primary btn-block" id="back-btn">Back</a>
             </div>
         </div>
     <%include file="/footer.html", args="jsFiles=[]" />

@@ -11,8 +11,8 @@ import base64
 import os
 import shutil
 import sys
-import cgi
 sys.path.insert(0, 'lib')
+import cgi_tweaked
 import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup

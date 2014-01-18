@@ -1,5 +1,12 @@
 <%page args="cssFiles"/>
 <%include file="/header.html", args="cssFiles=cssFiles"/>
+<body>
+    <h1 class="container">
+        <img src="/~/img/logo-1.png" class="mobile-hide"/><img id="logo-text" src="/~/img/logo-2.png" />
+        % if page_title != "Info":
+        <a class="btn btn-default btn-sm pull-right" href="/~"><i class="fa fa-info"></i></a>
+        % endif
+    </h1>
     <form role="form" method="post" action="/~">
         <input type="hidden" name="subfolder" value="${subfolder}">
 
