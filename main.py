@@ -13,6 +13,7 @@ import shutil
 import sys
 import cgi
 sys.path.insert(0, 'lib')
+import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup
 sys.path.insert(0, 'lib/zipstream')
@@ -33,15 +34,26 @@ ignoreHidden = False
 useDots = False
 from config import *
 
+# Variables that are automatically set. DO NOT TOUCH
+__version__ = 1.0
+depVersions = {"python": sys.version,
+               "mako": mako.__version__,
+               "zipstream": zipstream.__version__,
+               "fineuploader": "100",
+               "jquery": "1.10.2",
+               "bootstrap": "3.0.3",
+               "fontawesome": "4.0.3",
+               "swipebox": "1.2.1"}
+
 if os.name == 'nt':
     try:
         import win32api
         import win32con
+        depVersion["pywin32"] = win32api.GetFileVersionInfo(win32api.__file__, "\\")['FileVersionLS'] >> 16
     except ImportError:
         ignoreHidden = False
 
 
-# Temp variables that are automatically set. DO NOT TOUCH
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
 if username and password:
@@ -51,6 +63,7 @@ else:
 maintemplate = Template(filename='views/main.html', lookup=TemplateLookup(directories=['views/']))
 uptemplate = Template(filename='views/upload.html', lookup=TemplateLookup(directories=['views/']))
 errortemplate = Template(filename='views/error.html', lookup=TemplateLookup(directories=['views/']))
+infotemplate = Template(filename='views/info.html', lookup=TemplateLookup(directories=['views/']))
 chunk_dir = "chunks"
 
 
@@ -76,6 +89,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         pathVar = os.path.join(baseFolder, theArg)
         # paths that start with /~ refer to the directory
+        if theArg == "~":
+            return self.info()
         if theArg.startswith("~"):
             return self.getResource(theArg[2:])
         # Check for existence
@@ -142,7 +157,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
         fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
 
-        r = maintemplate.render(subfolder=subfolder,
+        r = maintemplate.render(dep=depVersions,
+                                subfolder=subfolder,
                                 up_level=up_level,
                                 page_title=page_title,
                                 nav_folders=nav_folders,
@@ -234,7 +250,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
-        r = uptemplate.render(subfolder=subfolder,
+        r = uptemplate.render(dep=depVersions,
+                              subfolder=subfolder,
                               up_level=up_level,
                               nav_folders=nav_folders,
                               baseFolder=baseFolder,
@@ -285,15 +302,45 @@ class MyHandler(SimpleHTTPRequestHandler):
         up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
-        r = errortemplate.render(subfolder=subfolder,
-                              up_level=up_level,
-                              nav_folders=nav_folders,
-                              baseFolder=baseFolder,
-                              useDots=useDots,
-                              page_title="File not found",
-                              msg="The file or folder specified does not exist.",
-                              errorCode=404)
+        r = errortemplate.render(dep=depVersions,
+                                 subfolder=subfolder,
+                                 up_level=up_level,
+                                 nav_folders=nav_folders,
+                                 baseFolder=baseFolder,
+                                 useDots=useDots,
+                                 page_title="File not found",
+                                 msg="The file or folder specified does not exist.",
+                                 errorCode=404)
         self.send_response(404)
+        self.send_header("Content-type", "text/html;charset=utf-8")
+        self.send_header("Content-length", len(r))
+        self.end_headers()
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
+
+    ## Shows info
+    def info(self):
+        r = infotemplate.render(dep=depVersions,
+                                page_title="Info",
+                                # App Info
+                                version=__version__,
+                                # Sys info
+                                depVersions=depVersions,
+                                # Connection info
+                                server=httpd.server_name,
+                                # Connection info / config
+                                port=port,
+                                useSSL=useSSL,
+                                protocol=protocol,
+                                # Config
+                                baseFolder=baseFolder,
+                                hideBarsDelay=hideBarsDelay,
+                                username=username,
+                                password=password,
+                                ignoreHidden=ignoreHidden,
+                                useDots=useDots
+                                )
+        self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
         self.end_headers()

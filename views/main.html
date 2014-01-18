@@ -1,4 +1,4 @@
-<%include file="/header.html", args="cssFiles=['swipebox'] "/>
+<%include file="/nav.html", args="cssFiles=['swipebox'], dep=dep "/>
 
         <div class="container">
             <div class="col-sm-12">
@@ -24,7 +24,7 @@
             </div>
         </div>
     </form>
-    <%include file="/footer.html", args="jsFiles=['jquery.swipebox.min']" />
+    <%include file="/footer.html", args="jsFiles=['jquery.swipebox.min'], dep=dep" />
     <script type="text/javascript">
         window.imageArray = [
 

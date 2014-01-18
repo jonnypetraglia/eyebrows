@@ -1,0 +1,31 @@
+<%page args="cssFiles"/>
+<%include file="/header.html", args="cssFiles=cssFiles"/>
+    <form role="form" method="post" action="/~">
+        <input type="hidden" name="subfolder" value="${subfolder}">
+
+        <nav class="affix" data-spy="affix" id="nav" data-offset-top="45" role="navigation">
+            <ol class="breadcrumb container">
+                % if not useDots:
+                <a class="btn btn-default pull-left icon-button" id="up-button" href="/${up_level}" title="Up a Level"></span><i class="fa fa-level-up fa-flip-horizontal"></i>&zwnj;</a>
+                % endif
+                % if page_title == "Upload":
+                    <a class="btn btn-default pull-right" title="Finish" href="/${subfolder}">Finish</a>
+                % else:
+                    <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
+                    <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
+                % endif
+
+                <li><a href="/">Home</a></li>
+                % for f in nav_folders:
+                <li><a href="/${'/'.join(nav_folders[:loop.index+1])}">${f}</a></li>
+                % endfor
+
+                <div id="mobile-nav-container">
+                    % if len(nav_folders) > 0:
+                        <a id="mobile-nav" class="mobile-only" href="/${'/'.join(nav_folders[:len(nav_folders)])}">${nav_folders[-1]}</a>
+                    % else:
+                        <a id="mobile-nav" class="mobile-only" href="/">Home</a>
+                    % endif
+                </div>
+            </ol>
+        </nav>
