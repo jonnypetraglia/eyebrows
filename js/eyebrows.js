@@ -6,13 +6,7 @@ $(window).load(function() {
     $(".img-file").click(function(event) {
         event.preventDefault();
         var val = $(this).text();
-        var i;
-        for(i = 0; i<window.imageArray.length; i++) {
-            if(window.imageArray[i].title == val)
-                break;
-        }
-        $.swipebox(window.imageArray, {initialIndexOnArray: i, hideBarsDelay : hideBarsDelay});
-        console.log("Clicked image");
+        clickImage(val)
     });
     $("#select-all").click(function() {
         $('.chk').prop('checked', $(this).prop('checked'));
@@ -30,7 +24,15 @@ $(window).load(function() {
 
 
     $(".clickableRow").click(function() {
-        window.document.location = $($($(this).children()[2]).children()[0]).attr("href");
+        var icon = $($($(this).children()[1]).children()[0]);
+        var href = $($($(this).children()[2]).children()[0]);
+        console.log(href);
+        if(icon.hasClass("fa-picture-o"))
+        {
+            clickImage(href.text());
+        } else {
+            window.document.location = href.attr("href");
+        }
     });
 
     try {$('tbody.rowlink').rowlink(); } catch(e) {}
@@ -59,3 +61,12 @@ function downloadChecked() {
 }
 
 
+function clickImage(val) {
+    var i;
+    for(i = 0; i<window.imageArray.length; i++) {
+        if(window.imageArray[i].title == val)
+            break;
+    }
+    $.swipebox(window.imageArray, {initialIndexOnArray: i, hideBarsDelay : hideBarsDelay});
+    console.log("Clicked image" + i);
+}

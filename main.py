@@ -12,10 +12,11 @@ import os
 import shutil
 import sys
 import cgi
+sys.path.insert(0, 'lib')
 from mako.template import Template
 from mako.lookup import TemplateLookup
+sys.path.insert(0, 'lib/zipstream')
 # Used for zip file generation
-sys.path.insert(0, "zipstream")
 import zipstream
 # Project files
 from icontypes import fileIcons
@@ -43,9 +44,13 @@ if os.name == 'nt':
 # Temp variables that are automatically set. DO NOT TOUCH
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
 imgList = []
-authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
+if username and password:
+    authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
+else:
+    authstring = None
 maintemplate = Template(filename='views/main.html', lookup=TemplateLookup(directories=['views/']))
 uptemplate = Template(filename='views/upload.html', lookup=TemplateLookup(directories=['views/']))
+errortemplate = Template(filename='views/error.html', lookup=TemplateLookup(directories=['views/']))
 chunk_dir = "chunks"
 
 
@@ -61,10 +66,10 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Handle Get requests
     def do_GET(self):
-        if self.headers.get('Authorization'):
+        if authstring and self.headers.get('Authorization'):
             token = self.headers.get('Authorization')[len("Basic "):]
             print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
-        if password and self.headers.get('Authorization') != authstring:
+        if authstring and self.headers.get('Authorization') != authstring:
             return self.send_401()  # authorization required
 
         theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
@@ -113,10 +118,6 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         if ext == "html" or ext == "htm":
             self.send_header('Content-type', 'text/html;charset=utf-8')
-        elif ext in fileIcons and (fileIcons[ext] == "file-text-o" or fileIcons[ext] == "code"):
-            self.send_header('Content-type', 'text/plain;charset=utf-8')
-        else:
-            self.send_header('Content-type', 'application/octet-stream')
         dat = f.read()
         self.send_header("Content-length", len(dat))
         if protocol == "HTTP/1.1":
@@ -230,7 +231,6 @@ class MyHandler(SimpleHTTPRequestHandler):
     # Show upload page
     def showUpload(self, subfolder):
         folder = os.path.join(baseFolder, subfolder)
-
         up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
@@ -280,8 +280,19 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._packFolder(z, subfolder, os.path.join(target, f))
 
     ## 404
-    def notFound(self, folder):
-        r = "Nope"
+    def notFound(self, subfolder):
+        folder = os.path.join(baseFolder, subfolder)
+        up_level = os.path.dirname(subfolder) if subfolder else ""
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+
+        r = errortemplate.render(subfolder=subfolder,
+                              up_level=up_level,
+                              nav_folders=nav_folders,
+                              baseFolder=baseFolder,
+                              useDots=useDots,
+                              page_title="File not found",
+                              msg="The file or folder specified does not exist.",
+                              errorCode=404)
         self.send_response(404)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))

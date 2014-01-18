@@ -1,0 +1,14 @@
+<%include file="/header.html", args="cssFiles=[] "/>
+
+        <div class="container">
+            <div class="col-sm-12">
+                <div class="page-header">
+                  <h1>${errorCode} <small>${page_title}</small></h1>
+                </div>
+                ${msg}
+            </div>
+        </div>
+    </form>
+    <%include file="/footer.html", args="jsFiles=['jquery.swipebox.min']" />
+</body>
+</html>
