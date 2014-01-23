@@ -37,4 +37,4 @@ def is_hidden(p):
         attribute = win32api.GetFileAttributes(p)
         return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
     else:
-        return p.startswith('.')
+        return os.path.basename(p).startswith('.')

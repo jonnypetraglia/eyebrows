@@ -45,13 +45,14 @@
     cursor:pointer;
 }
 
+.container {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 @media screen and (min-width: 0px) and (max-width: 720px) {
     .mobile-hide{
         display: none;
-    }
-    .container {
-        padding-left: 0px;
-        padding-right: 0px;
     }
     .mobile-only {
         display: inline;
@@ -79,4 +80,11 @@ li.alert-error {
 
 .alert-error .qq-upload-failed-text {
     display: inline;
+}
+
+#mobile-nav-list {
+    text-align: center;
+    margin-left: 0;
+    padding-left: 0;
+    list-style-type: none
 }

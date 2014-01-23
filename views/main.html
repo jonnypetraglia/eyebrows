@@ -1,27 +1,25 @@
 <%include file="/nav.html", args="cssFiles=['swipebox'], dep=dep "/>
 
         <div class="container">
-            <div class="col-sm-12">
-                <table id="file-list" class="table table-hover">
-                    <thead>
-                    <tr class="mobile-hide"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
-                    </thead>
-                    <tbody data-link="row" >
+            <table id="file-list" class="table table-hover">
+                <thead>
+                <tr class="mobile-hide"><th><input type='checkbox' id='select-all'></th><th></th><th>Name</th><th>Size</th><th>Date</th></tr>
+                </thead>
+                <tbody data-link="row" >
 
-                    % if useDots:
-                        ${doDots()}
-                    % endif
+                % if useDots:
+                    ${doDots()}
+                % endif
 
-                    % for f in folderList:
-                        ${doFolder(f)}
-                    % endfor
-                    % for f in fileList:
-                        ${doFile(f)}
-                    % endfor
+                % for f in folderList:
+                    ${doFolder(f)}
+                % endfor
+                % for f in fileList:
+                    ${doFile(f)}
+                % endfor
 
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </form>
     <%include file="/footer.html", args="jsFiles=['jquery.swipebox.min'], dep=dep" />
@@ -56,6 +54,10 @@
 
 
 <%def name="doFolder(name)">
+<%
+    import os
+    import time
+%>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
@@ -67,18 +69,21 @@
             <a href='/${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
         </td>
         <td class="mobile-hide"></td>
-        <td class="mobile-hide"></td>
+        <td class="mobile-hide">
+            <small>
+                ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(baseFolder, subfolder, name))))}
+            </small>
+        </td>
     </tr>
 </%def>
 
 
 <%def name="doFile(name)">
-    <%
+<%
         import os
         import urllib.parse
         import time
         from utils import formatBytes
-
         folder = os.path.join(baseFolder, subfolder)
         derp, ext = os.path.splitext(name)
         ext = ext[1:].lower()

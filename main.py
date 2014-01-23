@@ -17,6 +17,8 @@ import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup
 sys.path.insert(0, 'lib/zipstream')
+import json
+import math
 # Used for zip file generation
 import zipstream
 # Project files
@@ -101,6 +103,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         if os.path.isdir(pathVar):
             if "u" in parameters and parameters["u"]:
                 self.showUpload(theArg)
+            elif self.headers.get("Accept") == "application/json" or self.headers.get("Content-Type") == "application/json":
+                self.doJSON(theArg)
             else:
                 self.doFolder(theArg)
         if os.path.isfile(pathVar):
@@ -143,6 +147,39 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.wfile.flush()
         f.close()
 
+    ## Send the data back as JSON
+    def doJSON(self, subfolder):
+        folder = os.path.join(baseFolder, subfolder)
+        if os.path.islink(folder):
+            print("Found a symlink")
+            folder = os.path.realpath(folder)
+        page_title = os.path.basename(subfolder)
+        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
+        print("json: " + json.dumps(folderList))
+        
+        r = []
+        
+        for f in folderList:
+            r.append({"name": f,
+                      "size": 0,
+                      "time": math.floor(os.path.getmtime(os.path.join(folder, f)))
+                      })
+            
+        for f in fileList:
+            r.append({"name": f,
+                      "size": os.path.getsize(os.path.join(folder, f)),
+                      "time": os.path.getmtime(os.path.join(folder, f))
+                      })
+        
+        r = json.dumps(r)
+        self.send_response(200)
+        self.send_header("Content-type", "application/json;charset=utf-8")
+        self.send_header("Content-length", len(r))
+        self.end_headers()
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
+
     ## Display a folder
     def doFolder(self, subfolder):
         global imgList
@@ -176,7 +213,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
-        return
+
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
