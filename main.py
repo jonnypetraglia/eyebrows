@@ -56,7 +56,6 @@ if os.name == 'nt':
 
 
 numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
-imgList = []
 if username and password:
     authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
 else:
@@ -145,7 +144,6 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Display a folder
     def doFolder(self, subfolder):
-        global imgList
         folder = os.path.join(baseFolder, subfolder)
         if os.path.islink(folder):
             print("Found a symlink")
@@ -165,7 +163,6 @@ class MyHandler(SimpleHTTPRequestHandler):
                                 nav_folders=nav_folders,
                                 folderList=folderList,
                                 fileList=fileList,
-                                imgList=imgList,
                                 hideBarsDelay=hideBarsDelay,
                                 fileIcons=fileIcons,
                                 baseFolder=baseFolder,

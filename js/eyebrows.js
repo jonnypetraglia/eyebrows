@@ -7,6 +7,7 @@ $(window).load(function() {
         event.preventDefault();
         var val = $(this).text();
         clickImage(val)
+        event.stopPropagation();
     });
     $("#select-all").click(function() {
         $('.chk').prop('checked', $(this).prop('checked'));
@@ -23,13 +24,15 @@ $(window).load(function() {
     updateDownloadCount();
 
 
-    $(".clickableRow").click(function() {
+    $(".clickableRow").click(function(event) {
         var icon = $($($(this).children()[1]).children()[0]);
         var href = $($($(this).children()[2]).children()[0]);
         console.log(href);
         if(icon.hasClass("fa-picture-o"))
         {
+
             clickImage(href.text());
+            event.preventDefault();
         } else {
             window.document.location = href.attr("href");
         }
