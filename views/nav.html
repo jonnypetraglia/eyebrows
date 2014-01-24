@@ -21,6 +21,7 @@
                     <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
                     <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
                 % endif
+                 
 
                 <li><a href="/">Home</a></li>
                 % for f in nav_folders:
@@ -28,11 +29,13 @@
                 % endfor
 
                 <div id="mobile-nav-container">
-                    % if len(nav_folders) > 0:
-                        <a id="mobile-nav" class="mobile-only" href="/${'/'.join(nav_folders[:len(nav_folders)])}">${nav_folders[-1]}</a>
-                    % else:
-                        <a id="mobile-nav" class="mobile-only" href="/">Home</a>
-                    % endif
+                    <a id="mobile-nav" class="mobile-only" href="#" data-toggle="popover" data-placement='bottom' data-content='
+                        <ul id="mobile-nav-list">
+                        <li><a href="/">Home</a></li>
+                        % for f in nav_folders:
+                        <li><a href="/${'/'.join(nav_folders[:loop.index+1])}</li>">${f}</a>
+                        % endfor
+                    </ul>'>Home</a>
                 </div>
             </ol>
         </nav>
