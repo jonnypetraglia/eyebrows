@@ -76,11 +76,10 @@ class MyHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
     def send_info(self):
-        r = {"version": __version__,
-             "auth": authstring!=None,
-             "uploads": uploadEnabled}
+        print("Sending Info")
+        r = {"version": __version__, "auth": authstring!=None, "uploads": uploadEnabled}
         r = json.dumps(r)
-        self_send_response(111)
+        self.send_response(111)
         self.send_header("Content-type", "application/json;charset=utf-8")
         self.send_header("Content-length", len(r))
         self.end_headers()
@@ -95,8 +94,9 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Handle Get requests
     def do_GET(self):
-        if self.headers.get('X-Powered-By'):
-            return self.send_info
+        print(self.headers)
+        if self.headers.get('X-Info'):
+            return self.send_info()
         if authstring and self.headers.get('Authorization'):
             token = self.headers.get('Authorization')[len("Basic "):]
             print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
