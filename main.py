@@ -12,7 +12,7 @@ import os
 import shutil
 import sys
 sys.path.insert(0, 'lib')
-import cgi_tweaked
+import cgi_tweaked as cgi
 import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup
@@ -34,6 +34,7 @@ username = "admin"
 password = "admin"
 ignoreHidden = False
 useDots = False
+uploadEnabled = True
 from config import *
 baseFolder = os.path.normpath(baseFolder)
 
@@ -74,6 +75,19 @@ class MyHandler(SimpleHTTPRequestHandler):
     def __init__(self, req, client_addr, server):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
+    def send_info(self):
+        r = {"version": __version__,
+             "auth": authstring!=None,
+             "uploads": uploadEnabled}
+        r = json.dumps(r)
+        self_send_response(111)
+        self.send_header("Content-type", "application/json;charset=utf-8")
+        self.send_header("Content-length", len(r))
+        self.end_headers()
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
+
+
     def send_401(self):
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm=\"Log in\"')
@@ -81,6 +95,8 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Handle Get requests
     def do_GET(self):
+        if self.headers.get('X-Powered-By'):
+            return self.send_info
         if authstring and self.headers.get('Authorization'):
             token = self.headers.get('Authorization')[len("Basic "):]
             print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
@@ -162,12 +178,15 @@ class MyHandler(SimpleHTTPRequestHandler):
         for f in folderList:
             r.append({"name": f,
                       "size": 0,
+                      "icon": "folder",
                       "time": math.floor(os.path.getmtime(os.path.join(folder, f)))
                       })
             
         for f in fileList:
+            derp, ext = os.path.splitext(f)
             r.append({"name": f,
                       "size": os.path.getsize(os.path.join(folder, f)),
+                      "icon": fileIcons[ext[1:]] if (ext[1:] in fileIcons) else "file-o", 
                       "time": os.path.getmtime(os.path.join(folder, f))
                       })
         
@@ -224,18 +243,22 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.uploadFile()
 
     def uploadFile(self):
+        if not uploadEnabled:
+            self.notAllowed(self.path[1:])
+            return
         print("Ok uploading file")
         ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
         print("Parsed header")
         attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
         print("Parsed multipart")
+        print(attrs['qqfilename'])
         subfolder = self.path[1:]
         dest = os.path.join(baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
         chunked = False
         print("Uploading file to " + dest)
         if os.path.exists(dest):
             r = '{"error": "File exists", "preventRetry": true}'
-            self.send_response(200)
+            self.send_response(409)
             self.send_header("Content-type", "text/plain;charset=utf-8")
             self.send_header("Content-length", len(r))
             self.end_headers()
@@ -281,6 +304,9 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     # Show upload page
     def showUpload(self, subfolder):
+        if not uploadEnabled:
+            self.notAllowed(subfolder)
+            return
         folder = os.path.join(baseFolder, subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
@@ -347,6 +373,28 @@ class MyHandler(SimpleHTTPRequestHandler):
                                  msg="The file or folder specified does not exist.",
                                  errorCode=404)
         self.send_response(404)
+        self.send_header("Content-type", "text/html;charset=utf-8")
+        self.send_header("Content-length", len(r))
+        self.end_headers()
+        self.wfile.write(r.encode("utf-8"))
+        self.wfile.flush()
+    
+    ## 403 (currently used for saying that uploading is not allowed
+    def notAllowed(self, subfolder):
+        folder = os.path.join(baseFolder, subfolder)
+        up_level = os.path.dirname(subfolder) if subfolder else ""
+        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+
+        r = errortemplate.render(dep=depVersions,
+                                 subfolder=subfolder,
+                                 up_level=up_level,
+                                 nav_folders=nav_folders,
+                                 baseFolder=baseFolder,
+                                 useDots=useDots,
+                                 page_title="Not allowed",
+                                 msg="This functionality has been disabled.",
+                                 errorCode=404)
+        self.send_response(403)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
         self.end_headers()

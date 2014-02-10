@@ -23,7 +23,7 @@ Dude I don't even know about config yet. So far here is what you can do:
   * password = for authentication
   * ignoreHidden = whether or not to ignore hidden files
   * useDots = if you want to use the traditional ".." to navigate to the parent directory instead of the up button
-
+  * uploadEnabled = whether or not to allow the user to upload files
 
 2. Why?
 ----------------
