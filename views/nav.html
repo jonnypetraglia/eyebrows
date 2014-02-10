@@ -16,9 +16,13 @@
                 <a class="btn btn-default pull-left icon-button" id="up-button" href="/${up_level}" title="Up a Level"></span><i class="fa fa-level-up fa-flip-horizontal"></i>&zwnj;</a>
                 % endif
                 % if page_title == "Upload":
+                  % if uploadEnabled:
                     <a class="btn btn-default pull-right" title="Finish" href="/${subfolder}">Finish</a>
+                  % endif
                 % else:
-                    <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
+                  % if uploadEnabled:
+                      <a class="btn btn-default pull-right icon-button" title="Upload" href="?u=1"><i class="fa fa-upload"></i>&zwnj;</a>
+                  % endif
                     <button class="btn btn-default pull-right" title="Download"><i class="fa fa-download"></i><span id="dl-button"></span></button>
                 % endif
                  
