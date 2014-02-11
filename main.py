@@ -344,6 +344,9 @@ class MyHandler(SimpleHTTPRequestHandler):
                 if chunk:
                     self.wfile.write(chunk)
         self.wfile.flush()
+        self.wfile.close()
+        print("Download Complete")
+        return
 
     ## Packs a folder inside the ZIP; is recursive
     def _packFolder(self, z, subfolder, target):
