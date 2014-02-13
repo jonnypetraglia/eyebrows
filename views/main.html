@@ -1,5 +1,9 @@
 <%include file="/nav.html", args="cssFiles=['swipebox'], dep=dep "/>
 <% imgList = [] %>
+<%
+    import os
+    import time
+%>
         <div class="container">
             <table id="file-list" class="table table-hover">
                 <thead>
@@ -11,11 +15,12 @@
                     ${doDots()}
                 % endif
 
-                % for f in folderList:
-                    ${doFolder(f)}
-                % endfor
-                % for f in fileList:
-                    ${doFile(f)}
+                % for f in itemList:
+                    % if f[1]:
+                        ${doFolder(f[0])}
+                    % else:
+                        ${doFile(f[0])}
+                    % endif
                 % endfor
 
                 </tbody>
@@ -54,10 +59,6 @@
 
 
 <%def name="doFolder(name)">
-<%
-    import os
-    import time
-%>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>

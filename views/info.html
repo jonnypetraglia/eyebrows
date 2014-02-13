@@ -38,6 +38,7 @@
                       Beautifully open source.
                   </p>
                 </div>
+                % if authorized:
                 <div class="row">
                     <div class="col-sm-4">
                         <div class="panel panel-default">
@@ -61,7 +62,7 @@
                                 <h3 class="panel-title">Configuration</h3>
                             </div>
                             <div class="panel-body">
-                                % for x in ["port", "useSSL", "protocol", "baseFolder", "hideBarsDelay", "username", "password", "ignoreHidden", "useDots"]:
+                                % for x in ["port", "useSSL", "protocol", "baseFolder", "hideBarsDelay", "username", "password", "ignoreHidden", "strictIgnoreHidden", "useDots", "sortFoldersFirst"]:
                                     <div class="input-group input-group-sm config-info">
                                       <input class="form-control" type="text" disabled value="${x}">
                                       <span class="input-group-addon">${locals()['pageargs'][x]}</span>
@@ -72,9 +73,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="well">
+                <h3>
+                    Server started at ${uptime.strftime("%B %d, %Y %l:%M %p")}
+                    <br><small>${uptime_str}</small>
+                </h3>
+                </div>
                 <a href="#" onclick="window.history.back();" class="btn btn-lg btn-primary btn-block" id="back-btn">Back</a>
             </div>
         </div>
+        % endif
     <%include file="/footer.html", args="jsFiles=[]" />
 </body>
 </html>

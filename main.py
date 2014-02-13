@@ -11,6 +11,8 @@ import base64
 import os
 import shutil
 import sys
+import datetime
+import time
 sys.path.insert(0, 'lib')
 import cgi_tweaked as cgi
 import mako  # for the version
@@ -33,7 +35,9 @@ useSSL = True
 username = "admin"
 password = "admin"
 ignoreHidden = False
+strictIgnoreHidden = False
 useDots = False
+sortFoldersFirst = True
 uploadEnabled = True
 from config import *
 baseFolder = os.path.normpath(baseFolder)
@@ -75,42 +79,33 @@ class MyHandler(SimpleHTTPRequestHandler):
     def __init__(self, req, client_addr, server):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
-    def send_info(self):
-        print("Sending Info")
-        r = {"version": __version__, "auth": authstring!=None, "uploads": uploadEnabled}
-        r = json.dumps(r)
-        self.send_response(111)
-        self.send_header("Content-type", "application/json;charset=utf-8")
-        self.send_header("Content-length", len(r))
-        self.end_headers()
-        self.wfile.write(r.encode("utf-8"))
-        self.wfile.flush()
-
-
     def send_401(self):
+        print("Sending 401")
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm=\"Log in\"')
+        if protocol == "HTTP/1.1":
+            self.send_header('Connection', 'Close')
         self.end_headers()
 
     ## Handle Get requests
     def do_GET(self):
-        print(self.headers)
-        if self.headers.get('X-Info'):
-            return self.send_info()
+        theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
+        if theArg == "~":
+            return self.info()
+        # paths that start with /~ refer to the directory
+        if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img'):
+            return self.getResource(theArg[2:])
         if authstring and self.headers.get('Authorization'):
             token = self.headers.get('Authorization')[len("Basic "):]
             print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
         if authstring and self.headers.get('Authorization') != authstring:
             return self.send_401()  # authorization required
 
-        theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
         parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         pathVar = os.path.join(baseFolder, theArg)
         # paths that start with /~ refer to the directory
-        if theArg == "~":
-            return self.info()
-        if theArg.startswith("~"):
-            return self.getResource(theArg[2:])
+        #if theArg.startswith("~"):
+        #    return self.getResource(theArg[2:])
         # Check for existence
         if not os.path.exists(pathVar):
             return self.notFound(theArg)
@@ -169,8 +164,8 @@ class MyHandler(SimpleHTTPRequestHandler):
             print("Found a symlink")
             folder = os.path.realpath(folder)
         page_title = os.path.basename(subfolder)
-        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
-        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
+        folderList = sorted(listdir_dirs(folder, strictIgnoreHidden or ignoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, strictIgnoreHidden or ignoreHidden), key=lambda s: s.lower())
         print("json: " + json.dumps(folderList))
         
         r = []
@@ -209,16 +204,14 @@ class MyHandler(SimpleHTTPRequestHandler):
         page_title = os.path.basename(subfolder)
         nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
-        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
-        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
-
+        itemList = sorted(listdir(folder, strictIgnoreHidden or ignoreHidden),
+                          key=((lambda s: [-s[1], s[0].lower()]) if sortFoldersFirst else (lambda s: s[0].lower())))
         r = maintemplate.render(dep=depVersions,
                                 subfolder=subfolder,
                                 up_level=up_level,
                                 page_title=page_title,
                                 nav_folders=nav_folders,
-                                folderList=folderList,
-                                fileList=fileList,
+                                itemList=itemList,
                                 hideBarsDelay=hideBarsDelay,
                                 fileIcons=fileIcons,
                                 baseFolder=baseFolder,
@@ -230,6 +223,14 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
 
+    def foldersFirstCmp(itemA, itemB):
+        if itemA[1] != itemB[1]:
+            return itemA[1] - itemB[1]
+        return itemA[0] - itemB[0]
+
+    def notFoldersFirstCmp(item1, item2):
+        return itemA[0] - itemB[0]
+   
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
@@ -351,8 +352,8 @@ class MyHandler(SimpleHTTPRequestHandler):
     ## Packs a folder inside the ZIP; is recursive
     def _packFolder(self, z, subfolder, target):
         folder = os.path.join(baseFolder, subfolder, target)
-        folderList = sorted(listdir_dirs(folder, ignoreHidden), key=lambda s: s.lower())
-        fileList = sorted(listdir_files(folder, ignoreHidden), key=lambda s: s.lower())
+        folderList = sorted(listdir_dirs(folder, strictIgnoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, strictIgnoreHidden), key=lambda s: s.lower())
         for f in fileList:
             fullpath = os.path.join(baseFolder, subfolder, target, f)
             fulltarget = os.path.join(target, f)
@@ -406,29 +407,62 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Shows info
     def info(self):
-        r = infotemplate.render(dep=depVersions,
-                                page_title="Info",
-                                # App Info
-                                version=__version__,
-                                # Sys info
-                                depVersions=depVersions,
-                                # Config
-                                port=port,
-                                useSSL=useSSL,
-                                protocol=protocol,
-                                baseFolder=baseFolder,
-                                hideBarsDelay=hideBarsDelay,
-                                username=username,
-                                password=password,
-                                ignoreHidden=ignoreHidden,
-                                useDots=useDots
-                                )
-        self.send_response(200)
-        self.send_header("Content-type", "text/html;charset=utf-8")
-        self.send_header("Content-length", len(r))
-        self.end_headers()
-        self.wfile.write(r.encode("utf-8"))
-        self.wfile.flush()
+        authorized = True
+        if authstring and self.headers.get('Authorization') != authstring:
+            authorized = False
+        if self.headers.get("Accept") == "application/json" or self.headers.get("Content-Type") == "application/json":
+            r = {"version": __version__, "auth": authstring!=None, "uploads": uploadEnabled}
+            if authorized:
+                r.update({
+                         "dependencies": depVersions,
+                         "config": {
+                             "port": port,
+                             "useSSL": useSSL,
+                             "protocol": protocol,
+                             "hideBarsDelay": hideBarsDelay,
+                             "ignoreHidden": ignoreHidden,
+                             "strictIgnoreHidden": strictIgnoreHidden,
+                             "useDots": useDots,
+                             "sortFoldersFirst": sortFoldersFirst,
+                         },
+                         "uptime": time.mktime(uptime.timetuple())
+                })
+            r = json.dumps(r)
+            self.send_response(111)
+            self.send_header("Content-type", "application/json;charset=utf-8")
+            self.send_header("Content-length", len(r))
+            self.end_headers()
+            self.wfile.write(r.encode("utf-8"))
+            self.wfile.flush()
+        else:
+            r = infotemplate.render(page_title="Info",
+                                    # App Info
+                                    version=__version__,
+                                    # Sys info
+                                    depVersions=depVersions,
+                                    # Config
+                                    port=port,
+                                    useSSL=useSSL,
+                                    protocol=protocol,
+                                    baseFolder=baseFolder,
+                                    hideBarsDelay=hideBarsDelay,
+                                    username=username,
+                                    password=password,
+                                    ignoreHidden=ignoreHidden,
+                                    strictIgnoreHidden=strictIgnoreHidden,
+                                    useDots=useDots,
+                                    sortFoldersFirst=sortFoldersFirst,
+                                    # etc
+                                    uptime=uptime,
+                                    uptime_str=str(datetime.datetime.now()-uptime),
+                                    authorized=authorized
+                                    )
+            self.send_response(200)
+            self.send_header("Content-type", "text/html;charset=utf-8")
+            self.send_header("Content-length", len(r))
+            self.end_headers()
+            self.wfile.write(r.encode("utf-8"))
+            self.wfile.flush()
 
 
 ### Basically a HTTPServer with SSL ###
@@ -443,7 +477,7 @@ class SecureHTTPServer(HTTPServer):
         self.server_bind()
         self.server_activate()
 
-
+uptime = datetime.datetime.now()
 try:
     server_address = ('0.0.0.0', port)
     MyHandler.protocol_version = protocol

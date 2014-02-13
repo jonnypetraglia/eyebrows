@@ -17,6 +17,11 @@ def formatBytes(inputInt):
     return "{0:.2f}".format(inputInt) + " " + suffixes[i] + "B"
 
 
+def listdir(path, skiphidden):
+    for f in os.listdir(path):
+       if (not skiphidden) or (not is_hidden(os.path.join(path, f))):
+           yield [f, os.path.isfile(os.path.join(path, f))]
+
 def listdir_files(path, skiphidden):
     for f in os.listdir(path):
         if os.path.isfile(os.path.join(path, f)):
