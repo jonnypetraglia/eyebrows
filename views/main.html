@@ -11,7 +11,7 @@
                 </thead>
                 <tbody data-link="row" >
 
-                % if useDots:
+                % if config.useDots:
                     ${doDots()}
                 % endif
 
@@ -39,7 +39,7 @@
             % endfor
 
         ];
-        hideBarsDelay = ${str(hideBarsDelay)};
+        hideBarsDelay = ${str(config.hideBarsDelay)};
     </script>
 </body>
 </html>
@@ -72,7 +72,7 @@
         <td class="mobile-hide"></td>
         <td class="mobile-hide">
             <small>
-                ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(baseFolder, subfolder, name))))}
+                ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(config.baseFolder, subfolder, name))))}
             </small>
         </td>
     </tr>
@@ -85,7 +85,7 @@
         import urllib.parse
         import time
         from utils import formatBytes
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         derp, ext = os.path.splitext(name)
         ext = ext[1:].lower()
 

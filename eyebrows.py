@@ -27,21 +27,80 @@ import zipstream
 from icontypes import fileIcons
 from utils import *
 # Config
-baseFolder = os.path.expanduser("~")
-port = 8080
-hideBarsDelay = 3000
-protocol = "HTTP/1.0"
-useSSL = True
-username = "admin"
-password = "admin"
-ignoreHidden = False
-strictIgnoreHidden = False
-useDots = False
-sortFoldersFirst = True
-uploadEnabled = True
-from config import *
-baseFolder = os.path.normpath(baseFolder)
+import threading
+import atexit
 
+# Class to hold configuration
+class Config:
+    baseFolder = os.path.expanduser("~")
+    port = 8080
+    hideBarsDelay = 3000
+    protocol = "HTTP/1.0"
+    useSSL = False
+    username = "admin"
+    password = "admin"
+    ignoreHidden = False
+    strictIgnoreHidden = False
+    useDots = False
+    sortFoldersFirst = True
+    uploadEnabled = True
+    def saveToFile(self):
+        pass
+    def loadFromFile(self):
+        import config as userConfig
+        try:
+            self.baseFolder = userConfig.baseFolder
+        except ImportError:
+            pass
+        try:
+            self.port = userConfig.port
+        except ImportError:
+            pass
+        try:
+            self.hideBarsDelay = userConfig.hideBarsDelay
+        except NameError:
+            pass
+        try:
+            self.protocol = userConfig.protocol
+        except ImportError:
+            pass
+        try:
+            self.useSSL = userConfig.useSSL
+        except ImportError:
+            pass
+        try:
+            self.username = userConfig.username
+        except ImportError:
+            pass
+        try:
+            self.password = userConfig.password
+        except ImportError:
+            pass
+        try:
+            self.ignoreHidden = userConfig.ignoreHidden
+        except ImportError:
+            pass
+        try:
+            self.strictIgnoreHidden = userConfig.strictIgnoreHidden
+        except ImportError:
+            pass
+        try:
+            self.useDots = userConfig.useDots
+        except ImportError:
+            pass
+        try:
+            self.sortFoldersFirst = userConfig.sortFoldersFirst
+        except ImportError:
+            pass
+        try:
+            self.uploadEnabled = userConfig.uploadEnabled
+        except ImportError:
+            pass
+
+# Global Variables
+server = None
+config = Config()
+config.loadFromFile()
 # Variables that are automatically set. DO NOT TOUCH
 __version__ = 1.0
 depVersions = {"python": ".".join(str(x) for x in sys.version_info[0:3]),
@@ -59,14 +118,9 @@ if os.name == 'nt':
         import win32con
         depVersions["pywin32"] = win32api.GetFileVersionInfo(win32api.__file__, "\\")['FileVersionLS'] >> 16
     except ImportError:
-        ignoreHidden = False
+        config.ignoreHidden = False
+        config.strictIgnoreHidden = False
 
-
-numBase = len(os.path.normpath(baseFolder).split(os.sep)) - 1
-if username and password:
-    authstring = "Basic " + base64.b64encode((username + ":" + password).encode("utf-8")).decode("utf-8")
-else:
-    authstring = None
 maintemplate = Template(filename='views/main.html', lookup=TemplateLookup(directories=['views/']))
 uptemplate = Template(filename='views/upload.html', lookup=TemplateLookup(directories=['views/']))
 errortemplate = Template(filename='views/error.html', lookup=TemplateLookup(directories=['views/']))
@@ -83,7 +137,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         print("Sending 401")
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm=\"Log in\"')
-        if protocol == "HTTP/1.1":
+        if config.protocol == "HTTP/1.1":
             self.send_header('Connection', 'Close')
         self.end_headers()
 
@@ -102,7 +156,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             return self.send_401()  # authorization required
 
         parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-        pathVar = os.path.join(baseFolder, theArg)
+        pathVar = os.path.join(config.baseFolder, theArg)
         # paths that start with /~ refer to the directory
         #if theArg.startswith("~"):
         #    return self.getResource(theArg[2:])
@@ -128,7 +182,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         dat = f.read()
         self.send_header("Content-length", len(dat))
-        if protocol == "HTTP/1.1":
+        if config.protocol == "HTTP/1.1":
             self.send_header('Connection', 'Close')
         self.end_headers()
         self.wfile.write(dat)
@@ -144,13 +198,13 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         derp, ext = os.path.splitext(relPath)
         ext = ext[1:].lower()
-        f = open(os.path.join(baseFolder, relPath), 'rb')
+        f = open(os.path.join(config.baseFolder, relPath), 'rb')
         self.send_response(200)
         if ext == "html" or ext == "htm":
             self.send_header('Content-type', 'text/html;charset=utf-8')
         dat = f.read()
         self.send_header("Content-length", len(dat))
-        if protocol == "HTTP/1.1":
+        if config.protocol == "HTTP/1.1":
             self.send_header('Connection', 'Close')
         self.end_headers()
         self.wfile.write(dat)
@@ -159,13 +213,13 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Send the data back as JSON
     def doJSON(self, subfolder):
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         if os.path.islink(folder):
             print("Found a symlink")
             folder = os.path.realpath(folder)
         page_title = os.path.basename(subfolder)
-        folderList = sorted(listdir_dirs(folder, strictIgnoreHidden or ignoreHidden), key=lambda s: s.lower())
-        fileList = sorted(listdir_files(folder, strictIgnoreHidden or ignoreHidden), key=lambda s: s.lower())
+        folderList = sorted(listdir_dirs(folder, config.strictIgnoreHidden or config.ignoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, config.strictIgnoreHidden or config.ignoreHidden), key=lambda s: s.lower())
         print("json: " + json.dumps(folderList))
         
         r = []
@@ -195,27 +249,25 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Display a folder
     def doFolder(self, subfolder):
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         if os.path.islink(folder):
             print("Found a symlink")
             folder = os.path.realpath(folder)
 
         up_level = os.path.dirname(subfolder) if subfolder else ""
         page_title = os.path.basename(subfolder)
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
-        itemList = sorted(listdir(folder, strictIgnoreHidden or ignoreHidden),
-                          key=((lambda s: [-s[1], s[0].lower()]) if sortFoldersFirst else (lambda s: s[0].lower())))
+        itemList = sorted(listdir(folder, config.strictIgnoreHidden or config.ignoreHidden),
+                          key=((lambda s: [-s[1], s[0].lower()]) if config.sortFoldersFirst else (lambda s: s[0].lower())))
         r = maintemplate.render(dep=depVersions,
                                 subfolder=subfolder,
                                 up_level=up_level,
                                 page_title=page_title,
                                 nav_folders=nav_folders,
                                 itemList=itemList,
-                                hideBarsDelay=hideBarsDelay,
                                 fileIcons=fileIcons,
-                                baseFolder=baseFolder,
-                                useDots=useDots)
+                                config=config)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -244,7 +296,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.uploadFile()
 
     def uploadFile(self):
-        if not uploadEnabled:
+        if not config.uploadEnabled:
             self.notAllowed(self.path[1:])
             return
         print("Ok uploading file")
@@ -254,7 +306,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         print("Parsed multipart")
         print(attrs['qqfilename'])
         subfolder = self.path[1:]
-        dest = os.path.join(baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
+        dest = os.path.join(config.baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
         chunked = False
         print("Uploading file to " + dest)
         if os.path.exists(dest):
@@ -305,20 +357,19 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     # Show upload page
     def showUpload(self, subfolder):
-        if not uploadEnabled:
+        if not config.uploadEnabled:
             self.notAllowed(subfolder)
             return
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         r = uptemplate.render(dep=depVersions,
                               subfolder=subfolder,
                               up_level=up_level,
                               nav_folders=nav_folders,
-                              baseFolder=baseFolder,
-                              useDots=useDots,
-                              page_title="Upload")
+                              page_title="Upload",
+                              config=config)
         self.send_response(200)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -336,7 +387,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         with zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED) as z:
             for f in files:
-                fullpath = os.path.join(baseFolder, subfolder, f)
+                fullpath = os.path.join(config.baseFolder, subfolder, f)
                 if os.path.isdir(fullpath):
                     self._packFolder(z, subfolder, f)
                 else:
@@ -351,11 +402,11 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Packs a folder inside the ZIP; is recursive
     def _packFolder(self, z, subfolder, target):
-        folder = os.path.join(baseFolder, subfolder, target)
-        folderList = sorted(listdir_dirs(folder, strictIgnoreHidden), key=lambda s: s.lower())
-        fileList = sorted(listdir_files(folder, strictIgnoreHidden), key=lambda s: s.lower())
+        folder = os.path.join(config.baseFolder, subfolder, target)
+        folderList = sorted(listdir_dirs(folder, config.strictIgnoreHidden), key=lambda s: s.lower())
+        fileList = sorted(listdir_files(folder, config.strictIgnoreHidden), key=lambda s: s.lower())
         for f in fileList:
-            fullpath = os.path.join(baseFolder, subfolder, target, f)
+            fullpath = os.path.join(config.baseFolder, subfolder, target, f)
             fulltarget = os.path.join(target, f)
             z.write(fullpath, arcname=fulltarget)
         for f in folderList:
@@ -363,19 +414,18 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## 404
     def notFound(self, subfolder):
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         r = errortemplate.render(dep=depVersions,
                                  subfolder=subfolder,
                                  up_level=up_level,
                                  nav_folders=nav_folders,
-                                 baseFolder=baseFolder,
-                                 useDots=useDots,
                                  page_title="File not found",
                                  msg="The file or folder specified does not exist.",
-                                 errorCode=404)
+                                 errorCode=404,
+                                 config=config)
         self.send_response(404)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -385,19 +435,18 @@ class MyHandler(SimpleHTTPRequestHandler):
     
     ## 403 (currently used for saying that uploading is not allowed
     def notAllowed(self, subfolder):
-        folder = os.path.join(baseFolder, subfolder)
+        folder = os.path.join(config.baseFolder, subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
-        nav_folders = os.path.normpath(os.path.join(baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         r = errortemplate.render(dep=depVersions,
                                  subfolder=subfolder,
                                  up_level=up_level,
                                  nav_folders=nav_folders,
-                                 baseFolder=baseFolder,
-                                 useDots=useDots,
                                  page_title="Not allowed",
                                  msg="This functionality has been disabled.",
-                                 errorCode=404)
+                                 errorCode=403,
+                                 config=config)
         self.send_response(403)
         self.send_header("Content-type", "text/html;charset=utf-8")
         self.send_header("Content-length", len(r))
@@ -411,21 +460,12 @@ class MyHandler(SimpleHTTPRequestHandler):
         if authstring and self.headers.get('Authorization') != authstring:
             authorized = False
         if self.headers.get("Accept") == "application/json" or self.headers.get("Content-Type") == "application/json":
-            r = {"version": __version__, "auth": authstring!=None, "uploads": uploadEnabled}
+            r = {"version": __version__, "auth": authstring!=None, "uploads": config.uploadEnabled}
             if authorized:
                 r.update({
                          "dependencies": depVersions,
-                         "config": {
-                             "port": port,
-                             "useSSL": useSSL,
-                             "protocol": protocol,
-                             "hideBarsDelay": hideBarsDelay,
-                             "ignoreHidden": ignoreHidden,
-                             "strictIgnoreHidden": strictIgnoreHidden,
-                             "useDots": useDots,
-                             "sortFoldersFirst": sortFoldersFirst,
-                         },
-                         "uptime": time.mktime(uptime.timetuple())
+                         "config": config,
+                         "uptime": time.mktime(server.uptime.timetuple())
                 })
             r = json.dumps(r)
             self.send_response(111)
@@ -440,21 +480,9 @@ class MyHandler(SimpleHTTPRequestHandler):
                                     version=__version__,
                                     # Sys info
                                     depVersions=depVersions,
-                                    # Config
-                                    port=port,
-                                    useSSL=useSSL,
-                                    protocol=protocol,
-                                    baseFolder=baseFolder,
-                                    hideBarsDelay=hideBarsDelay,
-                                    username=username,
-                                    password=password,
-                                    ignoreHidden=ignoreHidden,
-                                    strictIgnoreHidden=strictIgnoreHidden,
-                                    useDots=useDots,
-                                    sortFoldersFirst=sortFoldersFirst,
                                     # etc
-                                    uptime=uptime,
-                                    uptime_str=str(datetime.datetime.now()-uptime),
+                                    uptime=server.uptime,
+                                    uptime_str=str(datetime.datetime.now()-server.uptime),
                                     authorized=authorized
                                     )
             self.send_response(200)
@@ -477,16 +505,52 @@ class SecureHTTPServer(HTTPServer):
         self.server_bind()
         self.server_activate()
 
-uptime = datetime.datetime.now()
-try:
-    server_address = ('0.0.0.0', port)
-    MyHandler.protocol_version = protocol
-    if useSSL:
-        httpd = SecureHTTPServer(server_address, MyHandler)
+def setConfig():
+    global config, numBase, authstring
+    config.baseFolder = os.path.normpath(config.baseFolder)
+    numBase = len(os.path.normpath(config.baseFolder).split(os.sep)) - 1
+    if config.username and config.password:
+        authstring = "Basic " + base64.b64encode((config.username + ":" + config.password).encode("utf-8")).decode("utf-8")
     else:
-        httpd = HTTPServer(server_address, MyHandler)
-    print ("Server Started")
-    httpd.serve_forever()
-except KeyboardInterrupt:
-    print('Shutting down server')
-    httpd.socket.close()
+        authstring = None
+
+
+class Server(threading.Thread):
+    uptime = None
+    httpd = None
+
+    def __init__(self):
+      threading.Thread.__init__(self)
+      uptime = datetime.datetime.now()
+
+    def run(self):
+        try:
+            server_address = ('0.0.0.0', config.port)
+            MyHandler.protocol_version = config.protocol
+            if config.useSSL:
+                self.httpd = SecureHTTPServer(server_address, MyHandler)
+            else:
+                self.httpd = HTTPServer(server_address, MyHandler)
+            print ("Server Started")
+            self.httpd.serve_forever()
+        except KeyboardInterrupt:
+            print('Shutting down server')
+            self.httpd.socket.close()
+
+    def shutdown(self):
+        print('Shutting down server')
+        self.httpd.shutdown()
+        self.httpd.socket.close()
+
+
+if not 'tkinter' in sys.modules:
+    setConfig()
+    server = Server()
+    server.start()
+
+
+def quit():
+    if server:
+        server.shutdown()
+
+atexit.register(quit)
