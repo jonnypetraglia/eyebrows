@@ -3,6 +3,13 @@ $(window).load(function() {
         $(".swipebox").swipebox();
     });
 
+    $(".vid-file").click(function(event) {
+        event.preventDefault();
+        var href = $(this).prop('href');
+        var title = $(this).text();
+        clickVideo(href, title);
+        event.stopPropagation();
+    });
     $(".img-file").click(function(event) {
         event.preventDefault();
         var val = $(this).text();
@@ -44,6 +51,9 @@ $(window).load(function() {
 
             clickImage(href.text());
             event.preventDefault();
+        } else if(icon.hasClass("fa-film")) {
+            clickVideo(href.prop('href'), href.text());
+            event.preventDefault();
         } else {
             window.document.location = href.attr("href");
         }
@@ -74,6 +84,12 @@ function downloadChecked() {
     });
 }
 
+
+function clickVideo(src, title) {
+    var arr = [{href: src, title: title}];
+    $.swipebox(arr, {hideBarsDelay : hideBarsDelay});
+    console.log("Clicked video " + title);
+}
 
 function clickImage(val) {
     var i;
