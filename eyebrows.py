@@ -479,14 +479,12 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.wfile.flush()
         else:
             r = infotemplate.render(page_title="Info",
-                                    # App Info
                                     version=__version__,
-                                    # Sys info
-                                    depVersions=depVersions,
-                                    # etc
+                                    dep=depVersions,
                                     uptime=server.uptime,
                                     uptime_str=str(datetime.datetime.now()-server.uptime),
-                                    authorized=authorized
+                                    authorized=authorized,
+                                    config=config
                                     )
             self.send_response(200)
             self.send_header("Content-type", "text/html;charset=utf-8")
@@ -524,7 +522,6 @@ class Server(threading.Thread):
 
     def __init__(self):
       threading.Thread.__init__(self)
-      uptime = datetime.datetime.now()
 
     def run(self):
         try:
@@ -534,6 +531,7 @@ class Server(threading.Thread):
                 self.httpd = SecureHTTPServer(server_address, MyHandler)
             else:
                 self.httpd = HTTPServer(server_address, MyHandler)
+            self.uptime = datetime.datetime.now()
             print ("Server Started")
             self.httpd.serve_forever()
         except KeyboardInterrupt:

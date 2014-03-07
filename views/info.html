@@ -1,4 +1,4 @@
-<%include file="/header.html", args="cssFiles=['info']"/>
+<%include file="/header.html", args="cssFiles=['info'], dep=dep"/>
 
     <%
         try:
@@ -65,7 +65,7 @@
                                 % for x in ["port", "useSSL", "protocol", "baseFolder", "hideBarsDelay", "username", "password", "ignoreHidden", "strictIgnoreHidden", "useDots", "sortFoldersFirst"]:
                                     <div class="input-group input-group-sm config-info">
                                       <input class="form-control" type="text" disabled value="${x}">
-                                      <span class="input-group-addon">${locals()['pageargs'][x]}</span>
+                                      <span class="input-group-addon">${getattr(config, x)}</span>
                                     </div>
                                     <br/>
                                 % endfor
@@ -75,14 +75,14 @@
                 </div>
                 <div class="well">
                 <h3>
-                    Server started at ${uptime.strftime("%B %d, %Y %l:%M %p")}
-                    <br><small>${uptime_str}</small>
+                    Uptime: ${uptime_str}
+                    <br><small>${uptime.strftime("%B %d, %Y %I:%M %p")}</small>
                 </h3>
                 </div>
                 <a href="#" onclick="window.history.back();" class="btn btn-lg btn-primary btn-block" id="back-btn">Back</a>
             </div>
         </div>
         % endif
-    <%include file="/footer.html", args="jsFiles=[]" />
+    <%include file="/footer.html", args="jsFiles=[], dep=dep" />
 </body>
 </html>

@@ -106,9 +106,8 @@
         urllib.parse.quote(link)
         try:
             os.path.getsize(os.path.join(folder, name))
-        except WindowsError:
-            wasError = True
-            return
+        except BaseException:
+            return ''
     %>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
@@ -128,6 +127,7 @@
         <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
+                <a class="btn btn-default btn-sm" href="/~"><i class="fa fa-info"></i></a>
             </small>
         </td>
     </tr>
