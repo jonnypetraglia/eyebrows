@@ -60,6 +60,26 @@ $(window).load(function() {
     });
 
     try {$('tbody.rowlink').rowlink(); } catch(e) {}
+    
+    $(".clickableRow").hover(function(){
+            $(this).find('.info-btn').removeClass('invisible');
+        }, function(){
+            $(this).find('.info-btn').addClass('invisible');
+        }
+    );
+    
+    $('.info-btn').click(function(event) {
+        console.log(this);
+        $(this).find('.dropdown-toggle').dropdown()
+        event.preventDefault();
+        event.stopPropagation();
+    });
+    $('.force-download').click(function(event) {
+        console.log(this);
+        console.log("JUST SAY YOU'RE SORRY");
+        event.stopPropagation();
+    });
+    
 });
 
 function updateDownloadCount() {

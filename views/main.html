@@ -59,6 +59,12 @@
 
 
 <%def name="doFolder(name)">
+<%
+        try:
+            os.path.getsize(os.path.join(folder, name))
+        except BaseException:
+            return ''
+%>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
@@ -73,6 +79,27 @@
         <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(config.baseFolder, subfolder, name))))}
+                <div class="btn-group info-btn invisible">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-info"></i>
+                  </button>
+                  <div class="dropdown-menu pull-right info-popup">
+                    <dl class="dl-horizontalNOT">
+                      <div class="col-sm-6">
+                          <dt>Folder name</dt>
+                          <dd>${name.replace("'", "&#39;")}</dd>
+                      </div>
+                      <div class="col-sm-6">
+                          <dt>Modified</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}</dd>
+                          <dt>Accessed</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getatime(os.path.join(folder, name))))}</dd>
+                          <dt>Created</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getctime(os.path.join(folder, name))))}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
             </small>
         </td>
     </tr>
@@ -127,7 +154,31 @@
         <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
-                <a class="btn btn-default btn-sm" href="/~"><i class="fa fa-info"></i></a>
+                <div class="btn-group info-btn invisible">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-info"></i>
+                  </button>
+                  <div class="dropdown-menu pull-right info-popup">
+                    <dl class="dl-horizontalNOT">
+                      <div class="col-sm-6">
+                          <dt>File name</dt>
+                          <dd>${name.replace("'", "&#39;")}</dd>
+                          <dt>Size</dt>
+                          <dd${"{:,}".format(os.path.getsize(os.path.join(folder, name)))} bytes</dd>
+                          <dt></dt>
+                          <dd><a href="/${link}?d=1" class="btn btn-sm btn-primary force-download" download="${name}">Download</a></dd>
+                      </div>
+                      <div class="col-sm-6">
+                          <dt>Modified</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}</dd>
+                          <dt>Accessed</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getatime(os.path.join(folder, name))))}</dd>
+                          <dt>Created</dt>
+                          <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getctime(os.path.join(folder, name))))}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
             </small>
         </td>
     </tr>

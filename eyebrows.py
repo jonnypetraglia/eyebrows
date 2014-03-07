@@ -231,7 +231,9 @@ class MyHandler(SimpleHTTPRequestHandler):
             r.append({"name": f,
                       "size": 0,
                       "icon": "folder",
-                      "time": math.floor(os.path.getmtime(os.path.join(folder, f)))
+                      "mtime": math.floor(os.path.getmtime(os.path.join(folder, f))),
+                      "atime": math.floor(os.path.getatime(os.path.join(folder, f))),
+                      "ctime": math.floor(os.path.getmtime(os.path.join(folder, f)))
                       })
             
         for f in fileList:
@@ -239,7 +241,9 @@ class MyHandler(SimpleHTTPRequestHandler):
             r.append({"name": f,
                       "size": os.path.getsize(os.path.join(folder, f)),
                       "icon": fileIcons[ext[1:]] if (ext[1:] in fileIcons) else "file-o", 
-                      "time": os.path.getmtime(os.path.join(folder, f))
+                      "mtime": math.floor(os.path.getmtime(os.path.join(folder, f))),
+                      "atime": math.floor(os.path.getatime(os.path.join(folder, f))),
+                      "ctime": math.floor(os.path.getmtime(os.path.join(folder, f)))
                       })
         
         r = json.dumps(r)

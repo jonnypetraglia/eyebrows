@@ -7,6 +7,7 @@
   2. Why
   3. Dependencies
   4. Licenses
+  5. Misc Notes
 
 ------------------------------------------------------
 
@@ -73,3 +74,18 @@ Other components are licensed as followed:
   * Eyebrow Photoshop Brush: Custom
   * pywin32: PSF
 
+5. Misc Notes
+----------------
+
+### Video ###
+
+Eyebrows *technically* supports in-browser video. BUT it is not guaranteed to work and depends on the browser you are using.
+Eyebrows does **NOT** use HTML5 *or* Flash for video playback, it simply embeds the video in the page and leaves it to your browser to use a plugin.
+
+Why not either of the options I stated? Because (a) Support for video in HTML5 is unreliable across browsers and (b) Flash is a dying technology (aaaand I couldn't find an acceptible open-source flash playerm; key word: 'acceptible').
+
+### Browser Support ###
+
+Eyebrows *should* theoretically work with just about any browser out there.
+
+*However*, it takes advantage of a lot things like CSS3 and HTML5 that might not work correctly in older browsers.
