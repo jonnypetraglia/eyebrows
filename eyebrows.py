@@ -1,3 +1,4 @@
+# -*- coding: cp1252 -*-
 # General socket/connection stuff
 from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
@@ -50,11 +51,13 @@ class Config:
         import config as userConfig
         try:
             self.baseFolder = userConfig.baseFolder
-        except ImportError:
+            if (os.name == 'nt' and self.baseFolder.endswith('\\')) or (os.name != 'nt' and self.baseFolder.endswith('/')):
+                self.baseFolder = self.baseFolder[:-1]
+        except:
             pass
         try:
             self.port = userConfig.port
-        except ImportError:
+        except:
             pass
         try:
             self.hideBarsDelay = userConfig.hideBarsDelay
@@ -62,39 +65,39 @@ class Config:
             pass
         try:
             self.protocol = userConfig.protocol
-        except ImportError:
+        except:
             pass
         try:
             self.useSSL = userConfig.useSSL
-        except ImportError:
+        except:
             pass
         try:
             self.username = userConfig.username
-        except ImportError:
+        except:
             pass
         try:
             self.password = userConfig.password
-        except ImportError:
+        except:
             pass
         try:
             self.ignoreHidden = userConfig.ignoreHidden
-        except ImportError:
+        except:
             pass
         try:
             self.strictIgnoreHidden = userConfig.strictIgnoreHidden
-        except ImportError:
+        except:
             pass
         try:
             self.useDots = userConfig.useDots
-        except ImportError:
+        except:
             pass
         try:
             self.sortFoldersFirst = userConfig.sortFoldersFirst
-        except ImportError:
+        except:
             pass
         try:
             self.uploadEnabled = userConfig.uploadEnabled
-        except ImportError:
+        except:
             pass
 
 # Global Variables
@@ -147,7 +150,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         if theArg == "~":
             return self.info()
         # paths that start with /~ refer to the directory
-        if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img'):
+        if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img') or theArg.startswith('~/fonts'):
             return self.getResource(theArg[2:])
         if authstring and self.headers.get('Authorization'):
             token = self.headers.get('Authorization')[len("Basic "):]

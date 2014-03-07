@@ -1,6 +1,6 @@
 <%page args="jsFiles, dep"/>
-<script src="//code.jquery.com/jquery-${dep['jquery']}.min.js"></script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/${dep['bootstrap']}/js/bootstrap.min.js"></script>
+<script src="/~/js/jquery-${dep['jquery']}.min.js"></script>
+<script src="/~/js/bootstrap-${dep['bootstrap']}.min.js"></script>
 % for f in jsFiles:
 <script src="/~/js/${f}.js"></script>
 % endfor

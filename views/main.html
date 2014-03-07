@@ -99,6 +99,11 @@
         if subfolder == "":
             link = name
         urllib.parse.quote(link)
+        try:
+            os.path.getsize(os.path.join(folder, name))
+        except WindowsError:
+            wasError = True
+            return
     %>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">

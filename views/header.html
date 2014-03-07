@@ -2,8 +2,8 @@
 <%page args="cssFiles, dep"/>
 <head>
     <link rel="icon" type="image/x-icon" href="/~/img/favicon.ico" />
-    <link href="//netdna.bootstrapcdn.com/bootstrap/${dep['bootstrap']}/css/bootstrap.min.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/${dep['fontawesome']}/css/font-awesome.css" rel="stylesheet">
+    <link href="/~/css/bootstrap-${dep['bootstrap']}.min.css" rel="stylesheet">
+    <link href="/~/css/font-awesome-${dep['fontawesome']}.min.css" rel="stylesheet">
     % for f in cssFiles:
     <link href="/~/css/${f}.css" rel="stylesheet">
     % endfor
