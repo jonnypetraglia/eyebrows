@@ -60,8 +60,9 @@
 
 <%def name="doFolder(name)">
 <%
+        folder = os.path.join(config.baseFolder, subfolder)
         try:
-            os.path.getsize(os.path.join(folder, name))
+            os.path.getmtime(os.path.join(folder, name))
         except BaseException:
             return ''
 %>
