@@ -320,7 +320,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
         print("Parsed multipart")
         print(attrs['qqfilename'])
-        subfolder = self.path[1:]
+        subfolder = urllib.parse.unquote(self.path[1:])
         dest = os.path.join(config.baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
         chunked = False
         print("Uploading file to " + dest)
