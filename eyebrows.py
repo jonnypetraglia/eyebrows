@@ -51,7 +51,7 @@ class Config:
         import config as userConfig
         try:
             self.baseFolder = userConfig.baseFolder
-            if (os.name == 'nt' and self.baseFolder.endswith('\\')) or (os.name != 'nt' and self.baseFolder.endswith('/')):
+            if (os.name == 'nt' and self.baseFolder.endswith('\\') and self.baseFolder.length()>3) or (os.name != 'nt' and self.baseFolder.endswith('/')):
                 self.baseFolder = self.baseFolder[:-1]
         except:
             pass
@@ -521,7 +521,7 @@ class SecureHTTPServer(HTTPServer):
 def setConfig():
     global config, numBase, authstring
     config.baseFolder = os.path.normpath(config.baseFolder)
-    numBase = len(os.path.normpath(config.baseFolder).split(os.sep)) - 1
+    numBase = len(list(filter(None, os.path.normpath(config.baseFolder).split(os.sep)))) - 1
     if config.username and config.password:
         authstring = "Basic " + base64.b64encode((config.username + ":" + config.password).encode("utf-8")).decode("utf-8")
     else:
