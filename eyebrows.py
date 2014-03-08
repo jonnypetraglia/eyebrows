@@ -521,7 +521,7 @@ class SecureHTTPServer(HTTPServer):
 def setConfig():
     global config, numBase, authstring
     config.baseFolder = os.path.normpath(config.baseFolder)
-    numBase = len(list(filter(None, os.path.normpath(config.baseFolder).split(os.sep)))) - 1
+    numBase = len(list(filter(None, os.path.normpath(config.baseFolder).split(os.sep))))
     if config.username and config.password:
         authstring = "Basic " + base64.b64encode((config.username + ":" + config.password).encode("utf-8")).decode("utf-8")
     else:
