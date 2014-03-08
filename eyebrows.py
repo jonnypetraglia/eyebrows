@@ -1,4 +1,4 @@
-# -*- coding: cp1252 -*-
+# -*- coding: utf-8 -*-
 # General socket/connection stuff
 from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
@@ -274,7 +274,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
         itemList = sorted(listdir(folder, config.strictIgnoreHidden or config.ignoreHidden),
-                          key=((lambda s: [-s[1], s[0].lower()]) if config.sortFoldersFirst else (lambda s: s[0].lower())))
+                          key=((lambda s: [-s[1], s[0].lower()]) if config.sortFoldersFirst else (lambda s: s[0].lower()))) 
         r = maintemplate.render(dep=depVersions,
                                 subfolder=subfolder,
                                 up_level=up_level,
