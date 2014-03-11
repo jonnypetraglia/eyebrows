@@ -2,6 +2,7 @@
 # General socket/connection stuff
 from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 import urllib.parse
 # SSL/authentication
 from socketserver import BaseServer
@@ -527,6 +528,12 @@ def setConfig():
     else:
         authstring = None
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+    
+class ThreadedSecureHTTPServer(ThreadingMixIn, SecureHTTPServer):
+    """Handle requests in a separate thread."""
+
 
 class Server(threading.Thread):
     uptime = None
@@ -540,9 +547,9 @@ class Server(threading.Thread):
             server_address = ('0.0.0.0', config.port)
             MyHandler.protocol_version = config.protocol
             if config.useSSL:
-                self.httpd = SecureHTTPServer(server_address, MyHandler)
+                self.httpd = ThreadedSecureHTTPServer(server_address, MyHandler)
             else:
-                self.httpd = HTTPServer(server_address, MyHandler)
+                self.httpd = ThreadedHTTPServer(server_address, MyHandler)
             self.uptime = datetime.datetime.now()
             print ("Server Started")
             self.httpd.serve_forever()
@@ -556,7 +563,8 @@ class Server(threading.Thread):
         self.httpd.socket.close()
 
 
-if not 'tkinter' in sys.modules:
+# Not being called from GUI; start the server!
+if __name__ == '__main__':
     setConfig()
     server = Server()
     server.start()
