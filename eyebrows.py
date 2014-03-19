@@ -247,7 +247,7 @@ class MyHandler(SimpleHTTPRequestHandler):
                 derp, ext = os.path.splitext(f)
                 r.append({"name": f,
                           "size": os.path.getsize(os.path.join(folder, f)),
-                          "icon": fileIcons[ext[1:]] if (ext[1:] in fileIcons) else "file-o", 
+                          "icon": fileIcons[ext[1:].lower()] if (ext[1:].lower() in fileIcons) else "file-o", 
                           "mtime": math.floor(os.path.getmtime(os.path.join(folder, f))),
                           "atime": math.floor(os.path.getatime(os.path.join(folder, f))),
                           "ctime": math.floor(os.path.getmtime(os.path.join(folder, f)))
