@@ -153,11 +153,10 @@ class MyHandler(SimpleHTTPRequestHandler):
         # paths that start with /~ refer to the directory
         if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img') or theArg.startswith('~/fonts'):
             return self.getResource(theArg[2:])
-        if authstring and self.headers.get('Authorization'):
-            token = self.headers.get('Authorization')[len("Basic "):]
-            print("Attempted login: " + base64.b64decode(token.encode("utf-8")).decode("utf-8"))
         if authstring and self.headers.get('Authorization') != authstring:
-            return self.send_401()  # authorization required
+          print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
+          return self.send_401() # authorization required
+            
 
         parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         pathVar = os.path.join(config.baseFolder, theArg)
