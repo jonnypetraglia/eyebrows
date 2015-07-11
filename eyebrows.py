@@ -4,6 +4,7 @@ from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
 from socketserver import ThreadingMixIn
 import urllib.parse
+import urllib.request
 # SSL/authentication
 from socketserver import BaseServer
 import socket
@@ -301,6 +302,10 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
+        if authstring and self.headers.get('Authorization') != authstring:
+          print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
+          return self.send_401() # authorization required
+
         print("Posted: " + self.path)
         print(self.headers)
         if self.path == "/~":
@@ -310,21 +315,13 @@ class MyHandler(SimpleHTTPRequestHandler):
         else:
             self.uploadFile()
 
+
     def uploadFile(self):
         if not config.uploadEnabled:
             self.notAllowed(self.path[1:])
             return
-        print("Ok uploading file")
-        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
-        print("Parsed header")
-        attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
-        print("Parsed multipart")
-        print(attrs['qqfilename'])
-        subfolder = urllib.parse.unquote(self.path[1:])
-        dest = os.path.join(config.baseFolder, subfolder, attrs['qqfilename'][0].decode('utf-8'))
-        chunked = False
-        print("Uploading file to " + dest)
-        if os.path.exists(dest):
+
+        def reject():
             r = '{"error": "File exists", "preventRetry": true}'
             self.send_response(409)
             self.send_header("Content-type", "text/plain;charset=utf-8")
@@ -332,7 +329,8 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(r.encode("utf-8"))
             self.wfile.flush()
-        else:
+
+        def accept():
             r = '{"success": true}'
             self.send_response(200)
             self.send_header("Content-type", "text/plain;charset=utf-8")
@@ -340,25 +338,61 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(r.encode("utf-8"))
             self.wfile.flush()
-        # Begin section copied from fine-uploader-server (slightly modified)
-        if 'qqtotalparts' in attrs and int(attrs['qqtotalparts'][0]) > 1:
-            chunked = True
-            dest_folder = os.path.join(chunk_dir, attrs['qquuid'][0])
-            dest = os.path.join(dest_folder, attrs['qqfilename'][0], str(attrs['qqpartindex'][0]))
-            # save dat file
-        if not os.path.exists(os.path.dirname(dest)):
-            os.makedirs(os.path.dirname(dest))
-        with open(dest, 'wb+') as destination:
-            destination.write(attrs['qqfile'][0])
-            # chunked
-        if chunked and (int(attrs['qqtotalparts'][0]) - 1 == int(attrs['qqpartindex'][0])):
-            combine_chunks(attrs['qqtotalparts'][0],
-                attrs['qqtotalfilesize'][0],
-                source_folder=os.path.dirname(dest),
-                dest=os.path.join(app.config['UPLOAD_DIRECTORY'], attrs['qquuid'][0],
-                    attrs['qqfilename'][0]))
-            shutil.rmtree(os.path.dirname(os.path.dirname(dest)))
-        # End section copied from fine-uploader-server
+
+        print("Ok uploading file")
+        subfolder = urllib.parse.unquote(self.path[1:])
+        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+        print("Parsed header")
+        if ctype != 'multipart/form-data':
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD':'POST',
+                         'CONTENT_TYPE':self.headers['Content-Type'],
+                     })
+            url = form.getvalue('url')
+            if 'filename' in form:
+                filename = form.getvalue('filename')
+            else:
+                filename = os.path.basename(urllib.parse.urlparse(url).path)
+            dest = os.path.join(config.baseFolder, subfolder, filename)
+            if os.path.exists(dest):
+                reject()
+                return
+            print("Uploading " + url + " to " + dest)
+            urllib.request.urlretrieve(url, dest)
+        else:
+            attrs = cgi.parse_multipart(self.rfile, pdict)  # qquuid, qqfilename, qqtotalfilesize, qqfile
+            print("Parsed multipart")
+            print(attrs['qqfilename'])
+            chunked = False
+            filename = attrs['qqfilename'][0].decode('utf-8')
+            dest = os.path.join(config.baseFolder, subfolder, filename)
+            if os.path.exists(dest):
+                reject()
+                return
+            print("Uploading file to " + dest)
+
+            # Begin section copied from fine-uploader-server (slightly modified)
+            if 'qqtotalparts' in attrs and int(attrs['qqtotalparts'][0]) > 1:
+                chunked = True
+                dest_folder = os.path.join(chunk_dir, attrs['qquuid'][0])
+                dest = os.path.join(dest_folder, attrs['qqfilename'][0], str(attrs['qqpartindex'][0]))
+                # save dat file
+            if not os.path.exists(os.path.dirname(dest)):
+                os.makedirs(os.path.dirname(dest))
+            with open(dest, 'wb+') as destination:
+                destination.write(attrs['qqfile'][0])
+                # chunked
+            if chunked and (int(attrs['qqtotalparts'][0]) - 1 == int(attrs['qqpartindex'][0])):
+                combine_chunks(attrs['qqtotalparts'][0],
+                    attrs['qqtotalfilesize'][0],
+                    source_folder=os.path.dirname(dest),
+                    dest=os.path.join(app.config['UPLOAD_DIRECTORY'], attrs['qquuid'][0],
+                        attrs['qqfilename'][0]))
+                shutil.rmtree(os.path.dirname(os.path.dirname(dest)))
+            # End section copied from fine-uploader-server
+        accept()
 
     # Copied from fine-uploader-server (slightly modified)
     def combine_chunks(total_parts, total_size, source_folder, dest):
