@@ -16,16 +16,18 @@ import shutil
 import sys
 import datetime
 import time
+import json
+import math
+# Tweaked / project specific
+if os.path.dirname(__file__) != "":
+    os.chdir(os.path.dirname(__file__))
 sys.path.insert(0, 'lib')
+sys.path.insert(0, os.path.join('lib', 'zipstream'))
 import cgi_tweaked as cgi
 import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup
-sys.path.insert(0, 'lib/zipstream')
-import json
-import math
-# Used for zip file generation
-import zipstream
+import zipstream    # for zip file generation
 # Project files
 from icontypes import fileIcons
 from utils import *
