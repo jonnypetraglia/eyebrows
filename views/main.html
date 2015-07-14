@@ -66,6 +66,7 @@
         except BaseException:
             return ''
 %>
+    <tr class="jump" id="${name}"></tr>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
@@ -137,6 +138,7 @@
         except BaseException:
             return ''
     %>
+    <tr class="jump" id="${name}"></tr>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
             <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
