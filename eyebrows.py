@@ -140,13 +140,26 @@ class MyHandler(SimpleHTTPRequestHandler):
     def __init__(self, req, client_addr, server):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        if config.protocol == "HTTP/1.1":
+            self.send_header('Connection', 'Close')
+        self.end_headers()
+
+    def end_headers (self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+        SimpleHTTPRequestHandler.end_headers(self)
+
+
     def send_401(self):
         print("Sending 401")
         self.send_response(401)
         self.send_header('WWW-Authenticate', 'Basic realm=\"Log in\"')
         if config.protocol == "HTTP/1.1":
             self.send_header('Connection', 'Close')
-        self.end_headers()
+        SimpleHTTPRequestHandler.end_headers(self)
 
     ## Handle Get requests
     def do_GET(self):
@@ -323,9 +336,9 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.notAllowed(self.path[1:])
             return
 
-        def reject():
-            r = '{"error": "File exists", "preventRetry": true}'
-            self.send_response(409)
+        def reject(reason, code):
+            r = '{"error": "' + reason + '", "preventRetry": true}'
+            self.send_response(code)
             self.send_header("Content-type", "text/plain;charset=utf-8")
             self.send_header("Content-length", len(r))
             self.end_headers()
@@ -343,23 +356,32 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         print("Ok uploading file")
         subfolder = urllib.parse.unquote(self.path[1:])
-        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+        ctype = None
+        if self.headers['Content-Type'] != None:
+            ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
         print("Parsed header")
         if ctype != 'multipart/form-data':
-            form = cgi.FieldStorage(
-                fp=self.rfile,
-                headers=self.headers,
-                environ={'REQUEST_METHOD':'POST',
-                         'CONTENT_TYPE':self.headers['Content-Type'],
-                     })
-            url = form.getvalue('url')
+            url = None
+            if ctype == "application/json":
+                raw_data = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
+                form = json.loads(raw_data)
+                url = form['url']
+            else: # assumes "application/x-www-form-urlencoded"
+                raw_data = self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8')
+                print(raw_data)
+                form = urllib.parse.parse_qs(raw_data)
+                url = form['url'][0]
+                print(form)
+            if url is None:
+                reject('No file or URL supplied', 400)
+                return
             if 'filename' in form:
-                filename = form.getvalue('filename')
+                filename = form['filename']
             else:
                 filename = os.path.basename(urllib.parse.urlparse(url).path)
             dest = os.path.join(config.baseFolder, subfolder, filename)
             if os.path.exists(dest):
-                reject()
+                reject("File exists", 409)
                 return
             print("Uploading " + url + " to " + dest)
             urllib.request.urlretrieve(url, dest)
@@ -371,7 +393,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             filename = attrs['qqfilename'][0].decode('utf-8')
             dest = os.path.join(config.baseFolder, subfolder, filename)
             if os.path.exists(dest):
-                reject()
+                reject("File exists", 409)
                 return
             print("Uploading file to " + dest)
 
