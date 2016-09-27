@@ -1,3 +1,21 @@
+/*html {
+    font-size: 100%;
+}
+body {
+    font-size: 1em;
+}
+WHYYYYYY
+*/
+
+body {
+    font-size: 1.6em;
+}
+
+/* Fix for double underlining until I update boostrap */
+abbr {
+    text-decoration: none;
+}
+
 .affix {
     position: fixed;
     top: 0;
@@ -90,10 +108,34 @@ li.alert-error {
 }
 
 
+tr td {
+    vertical-align: middle;
+}
+
+/* Filename */
+tr th:nth-child(3) {
+    width:100%;
+}
+
+/* Size & Date */
+tr td:nth-child(4),
+tr td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.icon-and-checkbox > * {
+    color: black;
+}
+
 .invisible {
     visibility: invisible;
 }
 
 .info-popup {
     width: 30em;
+    cursor: default;
+}
+
+.info-popup .col-sm-12 {
+    white-space: normal;
 }

@@ -1,8 +1,10 @@
 <%include file="/nav.html", args="cssFiles=['swipebox'], dep=dep "/>
-<% imgList = [] %>
+<% mediaList = [] %>
 <%
     import os
     import time
+    import cgi_tweaked as cgi
+    import urllib
 %>
         <div class="container">
             <table id="file-list" class="table table-hover">
@@ -29,13 +31,13 @@
     </form>
     <%include file="/footer.html", args="jsFiles=['jquery.swipebox'], dep=dep" />
     <script type="text/javascript">
-        window.imageArray = [
-
-            % if len(imgList) > 0:
-                {href:'${"/" + subfolder if subfolder else ""}/${imgList[0]}', title:'${imgList[0]}'}
-            % endif
-            % for i in imgList[1:]:
-                ,{href:'${"/" + subfolder if subfolder else ""}/${i.replace("'", "&#39;")}', title:'${i.replace("'", "&#39;")}'}
+        window.swipeboxArray = [
+            % for media in mediaList:
+                {
+                    href:'${cgi.escape( urllib.parse.quote( ("/" + subfolder if subfolder else "") + "/" + media["name"])) + ("?swipeboxvideo=1" if media["video"] else "")}',
+                    title:'${cgi.escape( media["name"] )}'
+                }
+                ,
             % endfor
 
         ];
@@ -68,36 +70,38 @@
 %>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
-            <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
+            <input type='checkbox' class='chk' name='items' value='${cgi.escape(name)}'/>
         </td>
         <td class="icon-and-checkbox">
-            <i class='fa fa-folder'></i>
+            <a href='#${cgi.escape(name)}'>
+                <i class='fa fa-folder'></i>
+            </a>
         </td>
         <td>
-            <a href='/${"/".join([subfolder, name]) if subfolder != "" else name}'>${name}</a>
+            <a href='/${ cgi.escape( urllib.parse.quote( "/".join([subfolder, name]) if subfolder != "" else name ) )}'>${name}</a>
         </td>
         <td class="mobile-hide"></td>
         <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(config.baseFolder, subfolder, name))))}
-                <div class="btn-group info-btn invisible">
-                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <div class="btn-group invisible info">
+                  <button type="button" class="btn btn-default info-btn dropdown-toggle" data-toggle="dropdown">
                     <i class="fa fa-info"></i>
                   </button>
                   <div class="dropdown-menu pull-right info-popup">
                     <dl class="dl-horizontalNOT">
-                      <div class="col-sm-6">
+                      <dl class="col-sm-12">
                           <dt>Folder name</dt>
-                          <dd>${name.replace("'", "&#39;")}</dd>
-                      </div>
-                      <div class="col-sm-6">
+                          <dd>${cgi.escape(name)}</dd>
+                      </dl>
+                      <dl class="col-sm-6">
                           <dt>Modified</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}</dd>
                           <dt>Accessed</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getatime(os.path.join(folder, name))))}</dd>
                           <dt>Created</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getctime(os.path.join(folder, name))))}</dd>
-                      </div>
+                      </dl>
                     </dl>
                   </div>
                 </div>
@@ -118,65 +122,68 @@
         ext = ext[1:].lower()
 
         if ext in fileIcons:
-            if fileIcons[ext] == "picture-o":
-                imgList.append(name)
-                imgclass = "class='img-file'"
-            if fileIcons[ext] == "film":
-                imgclass = "class='vid-file'"
+            if fileIcons[ext] == "picture-o" or fileIcons[ext] == "film":
+                mediaList.append({'name': name, 'video': fileIcons[ext] == "film"})
+                a_class = "class='swipe'"
             else:
-                imgclass = ""
+                a_class = ""
         else:
-            imgclass = ""
+            a_class = ""
 
         link = "/".join([subfolder, name])
         if subfolder == "":
             link = name
-        urllib.parse.quote(link)
+        link = urllib.parse.quote(link)
+        bytes = 0
         try:
-            os.path.getsize(os.path.join(folder, name))
+            bytes = os.path.getsize(os.path.join(folder, name))
         except BaseException:
             return ''
     %>
     <tr class='clickableRow'>
         <td class="icon-and-checkbox mobile-hide">
-            <input type='checkbox' class='chk' name='items' value='${name.replace("'", "&#39;")}'>
+            <input type='checkbox' class='chk' name='items' value='${cgi.escape(name)}' />
         </td>
         <td class="icon-and-checkbox">
-            <i class='fa fa-${fileIcons[ext] if ext in fileIcons else "file-o"}'></i>
+            <a href='#${name}'>
+                <i class='fa fa-${fileIcons[ext] if ext in fileIcons else "file-o"}'></i>
+            </a>
         </td>
         <td>
-            <a href='/${link}' ${imgclass}>${name.replace("'", "&#39;")}</a>
+            <a href='/${link}' id='${cgi.escape(name)}' ${a_class}>${name}</a>
         </td>
         <td class="mobile-hide">
             <small>
-                ${formatBytes(os.path.getsize(os.path.join(folder, name)))}
+                <abbr title="${"{:,}".format(bytes)} bytes">${formatBytes(bytes)}</abbr>
             </small>
         </td>
         <td class="mobile-hide">
             <small>
                 ${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}
-                <div class="btn-group info-btn invisible">
-                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <div class="btn-group info invisible">
+                  <button type="button" class="btn btn-default info-btn dropdown-toggle" data-toggle="dropdown">
                     <i class="fa fa-info"></i>
                   </button>
                   <div class="dropdown-menu pull-right info-popup">
                     <dl class="dl-horizontalNOT">
-                      <div class="col-sm-6">
+                      <dl class="col-sm-12">
                           <dt>File name</dt>
-                          <dd>${name.replace("'", "&#39;")}</dd>
+                          <dd>${cgi.escape(name)}</dd>
+                      </dl>
+                      <dl class="col-sm-6">
                           <dt>Size</dt>
-                          <dd${"{:,}".format(os.path.getsize(os.path.join(folder, name)))} bytes</dd>
-                          <dt></dt>
+                          <dd>${"{:,}".format(os.path.getsize(os.path.join(folder, name)))} bytes</dd>
+                          <dt>&nbsp;</dt>
                           <dd><a href="/${link}?d=1" class="btn btn-sm btn-primary force-download" download="${name}">Download</a></dd>
-                      </div>
-                      <div class="col-sm-6">
+                      </dl>
+                      <dl class="col-sm-6">
                           <dt>Modified</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getmtime(os.path.join(folder, name))))}</dd>
                           <dt>Accessed</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getatime(os.path.join(folder, name))))}</dd>
                           <dt>Created</dt>
                           <dd>${time.strftime('%b %d, %Y %I:%M%p', time.localtime(os.path.getctime(os.path.join(folder, name))))}</dd>
-                      </div>
+                      </dl>
                     </dl>
                   </div>
                 </div>
