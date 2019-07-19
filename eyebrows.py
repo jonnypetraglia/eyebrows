@@ -16,6 +16,7 @@ import shutil
 import sys
 import datetime
 import time
+<<<<<<< HEAD
 import json
 import math
 # Tweaked / project specific
@@ -23,17 +24,52 @@ if os.path.dirname(__file__) != "":
     os.chdir(os.path.dirname(__file__))
 sys.path.insert(0, 'lib')
 sys.path.insert(0, os.path.join('lib', 'zipstream'))
+=======
+this_file = __file__
+def rel_dir(*what):
+    x = os.path.dirname(os.path.abspath(this_file))
+    for i, w in enumerate(what):
+        x = os.path.join(x, w)
+    return os.path.normpath(x)
+
+sys.path.insert(0, rel_dir('lib'))
+>>>>>>> refs/remotes/origin/master
 import cgi_tweaked as cgi
 import mako  # for the version
 from mako.template import Template
 from mako.lookup import TemplateLookup
+<<<<<<< HEAD
 import zipstream    # for zip file generation
+=======
+sys.path.insert(0, rel_dir('lib', 'zipstream'))
+import json
+import math
+# Used for zip file generation
+import zipstream
+>>>>>>> refs/remotes/origin/master
 # Project files
 from icontypes import fileIcons
 from utils import *
 # Config
 import threading
 import atexit
+
+class NotAllowedException(BaseException):
+    '''whatever'''
+
+def base_dir(*what):
+    x = os.path.abspath(config.baseFolder)
+    for i, w in enumerate(what):
+        print("what", w)
+        x = os.path.join(x, w)
+    x = os.path.normpath(x)
+    if not x.startswith(os.path.abspath(config.baseFolder)):
+        print(x, "does not start with", os.path.abspath(config.baseFolder))
+        x = ""
+        for i, w in enumerate(what):
+            x = os.path.join(x, w)
+        raise NotAllowedException(x)
+    return x
 
 # Class to hold configuration
 class Config:
@@ -117,7 +153,7 @@ depVersions = {"python": ".".join(str(x) for x in sys.version_info[0:3]),
                "jquery": "1.10.2",
                "bootstrap": "3.0.3",
                "fontawesome": "4.0.3",
-               "swipebox": "1.2.1"}
+               "swipebox": "1.4.4"}
 
 if os.name == 'nt':
     try:
@@ -128,10 +164,10 @@ if os.name == 'nt':
         config.ignoreHidden = False
         config.strictIgnoreHidden = False
 
-maintemplate = Template(filename='views/main.html', lookup=TemplateLookup(directories=['views/']))
-uptemplate = Template(filename='views/upload.html', lookup=TemplateLookup(directories=['views/']))
-errortemplate = Template(filename='views/error.html', lookup=TemplateLookup(directories=['views/']))
-infotemplate = Template(filename='views/info.html', lookup=TemplateLookup(directories=['views/']))
+maintemplate = Template(filename=rel_dir('views/main.html'), lookup=TemplateLookup(directories=[rel_dir('views/')]))
+uptemplate = Template(filename=rel_dir('views/upload.html'), lookup=TemplateLookup(directories=[rel_dir('views/')]))
+errortemplate = Template(filename=rel_dir('views/error.html'), lookup=TemplateLookup(directories=[rel_dir('views/')]))
+infotemplate = Template(filename=rel_dir('views/info.html'), lookup=TemplateLookup(directories=[rel_dir('views/')]))
 chunk_dir = "chunks"
 
 
@@ -139,6 +175,7 @@ chunk_dir = "chunks"
 class MyHandler(SimpleHTTPRequestHandler):
     def __init__(self, req, client_addr, server):
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+<<<<<<< HEAD
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -153,6 +190,9 @@ class MyHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.end_headers(self)
 
 
+=======
+        
+>>>>>>> refs/remotes/origin/master
     def send_401(self):
         print("Sending 401")
         self.send_response(401)
@@ -163,40 +203,45 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Handle Get requests
     def do_GET(self):
-        theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
-        if theArg == "~":
-            return self.info()
-        # paths that start with /~ refer to the directory
-        if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img') or theArg.startswith('~/fonts'):
-            return self.getResource(theArg[2:])
-        if authstring and self.headers.get('Authorization') != authstring:
-          print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
-          return self.send_401() # authorization required
-            
+        try:
+            theArg = urllib.parse.unquote(self.path.split("?")[0])[1:]
+            if theArg == "~":
+                return self.info()
+            # paths that start with /~ refer to the directory
+            if theArg.startswith("~/css") or theArg.startswith('~/js') or theArg.startswith('~/img') or theArg.startswith('~/fonts'):
+                return self.getResource(theArg[2:])
+            if authstring and self.headers.get('Authorization') != authstring:
+                print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
+                return self.send_401() # authorization required
+                
 
-        parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-        pathVar = os.path.join(config.baseFolder, theArg)
-        # paths that start with /~ refer to the directory
-        #if theArg.startswith("~"):
-        #    return self.getResource(theArg[2:])
-        # Check for existence
-        if not os.path.exists(pathVar):
-            return self.notFound(theArg)
-        # Handle the file or folder
-        if os.path.isdir(pathVar):
-            if "u" in parameters and parameters["u"]:
-                self.showUpload(theArg)
-            elif self.headers.get("Accept") == "application/json" or self.headers.get("Content-Type") == "application/json":
-                self.doJSON(theArg)
-            else:
-                self.doFolder(theArg)
-        if os.path.isfile(pathVar):
-            self.downloadFile(theArg, parameters)
+            print("theArg", theArg)
+            parameters = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            pathVar = base_dir(theArg)
+            # Handle the file or folder
+            if os.path.isdir(pathVar):
+                if "u" in parameters and parameters["u"]:
+                    self.showUpload(theArg)
+                elif self.headers.get("Accept") == "application/json" or self.headers.get("Content-Type") == "application/json":
+                    self.doJSON(theArg)
+                else:
+                    self.doFolder(theArg)
+            if os.path.isfile(pathVar):
+                self.downloadFile(theArg, parameters)
+        except NotAllowedException as exception:
+            self.notAllowed(str(exception))
 
     ## Serve a resource that lives in the same folder as Eyebrows, such as CSS or JS
     def getResource(self, relPath):
         print("Resourcing: " + relPath)
-        f = open(os.path.normpath(relPath), 'rb')
+        fullPath = rel_dir(relPath)
+        if not fullPath.startswith(rel_dir()):
+            print("Not Allowed: " + fullPath)
+            return self.notAllowed(relPath)
+        if not os.path.isfile(fullPath):
+            return self.notFound(relPath)
+        
+        f = open(fullPath, 'rb')
         self.send_response(200)
 
         dat = f.read()
@@ -211,13 +256,17 @@ class MyHandler(SimpleHTTPRequestHandler):
     ## Download or view a file when requested from a GET
     def downloadFile(self, relPath, parameters):
         print("Downloading: " + relPath)
+        fullPath = base_dir(relPath)
+        if not os.path.isfile(fullPath):
+            return self.notFound(relpath)
+        
         if "i" in parameters and parameters["i"]:
             SimpleHTTPRequestHandler.do_GET(self)
             return
 
         derp, ext = os.path.splitext(relPath)
         ext = ext[1:].lower()
-        f = open(os.path.join(config.baseFolder, relPath), 'rb')
+        f = open(fullPath, 'rb')
         self.send_response(200)
         if ext == "html" or ext == "htm":
             self.send_header('Content-type', 'text/html;charset=utf-8')
@@ -232,7 +281,9 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Send the data back as JSON
     def doJSON(self, subfolder):
-        folder = os.path.join(config.baseFolder, subfolder)
+        folder = base_dir(relPath)
+        if not os.path.isdir(folder):
+            return self.notFound(subfolder)
         if os.path.islink(folder):
             print("Found a symlink")
             folder = os.path.realpath(folder)
@@ -280,7 +331,9 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Display a folder
     def doFolder(self, subfolder):
-        folder = os.path.join(config.baseFolder, subfolder)
+        folder = base_dir(subfolder)
+        if not os.path.isdir(folder):
+            return self.notFound(subfolder)
         if os.path.islink(folder):
             print("Found a symlink")
             folder = os.path.realpath(folder)
@@ -317,18 +370,21 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Respond to POSTs; used for requesting zip files
     def do_POST(self):
-        if authstring and self.headers.get('Authorization') != authstring:
-          print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
-          return self.send_401() # authorization required
+        try:
+            if authstring and self.headers.get('Authorization') != authstring:
+                print(authstring + " vs " + ("<None>" if self.headers.get('Authorization') is None else self.headers.get('Authorization')))
+                return self.send_401() # authorization required
 
-        print("Posted: " + self.path)
-        print(self.headers)
-        if self.path == "/~":
-            post_data = urllib.parse.parse_qs(self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8'))
-            print(post_data)
-            self.downloadZip(post_data['subfolder'][0] if 'subfolder' in post_data else "", post_data['items'])
-        else:
-            self.uploadFile()
+            print("Posted: " + self.path)
+            print(self.headers)
+            if self.path == "/~":
+                post_data = urllib.parse.parse_qs(self.rfile.read(int(self.headers['Content-Length'])).decode('utf-8'))
+                print(post_data)
+                self.downloadZip(post_data['subfolder'][0] if 'subfolder' in post_data else "", post_data['items'])
+            else:
+                self.uploadFile()
+        except NotAllowedException as notAllowed:
+            self.notAllowed(notAllowed)
 
 
     def uploadFile(self):
@@ -356,9 +412,14 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         print("Ok uploading file")
         subfolder = urllib.parse.unquote(self.path[1:])
+<<<<<<< HEAD
         ctype = None
         if self.headers['Content-Type'] != None:
             ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+=======
+        base_dir(subfolder)   ## Check for valid path
+        ctype, pdict = cgi.parse_header(self.headers['Content-Type'])
+>>>>>>> refs/remotes/origin/master
         print("Parsed header")
         if ctype != 'multipart/form-data':
             url = None
@@ -379,7 +440,7 @@ class MyHandler(SimpleHTTPRequestHandler):
                 filename = form['filename']
             else:
                 filename = os.path.basename(urllib.parse.urlparse(url).path)
-            dest = os.path.join(config.baseFolder, subfolder, filename)
+            dest = base_dir(subfolder, filename)
             if os.path.exists(dest):
                 reject("File exists", 409)
                 return
@@ -391,30 +452,33 @@ class MyHandler(SimpleHTTPRequestHandler):
             print(attrs['qqfilename'])
             chunked = False
             filename = attrs['qqfilename'][0].decode('utf-8')
-            dest = os.path.join(config.baseFolder, subfolder, filename)
+            dest = base_dir(subfolder, subfolder, filename)
             if os.path.exists(dest):
                 reject("File exists", 409)
                 return
             print("Uploading file to " + dest)
+            
+            if not os.path.exists(os.path.dirname(dest)):
+                os.makedirs(os.path.dirname(dest))
 
             # Begin section copied from fine-uploader-server (slightly modified)
             if 'qqtotalparts' in attrs and int(attrs['qqtotalparts'][0]) > 1:
                 chunked = True
-                dest_folder = os.path.join(chunk_dir, attrs['qquuid'][0])
-                dest = os.path.join(dest_folder, attrs['qqfilename'][0], str(attrs['qqpartindex'][0]))
-                # save dat file
-            if not os.path.exists(os.path.dirname(dest)):
-                os.makedirs(os.path.dirname(dest))
-            with open(dest, 'wb+') as destination:
+                temp_dest = base_dir(chunk_dir, attrs['qquuid'][0], attrs['qqfilename'][0], str(attrs['qqpartindex'][0]))
+                if not os.path.exists(os.path.dirname(temp_dest)):
+                    os.makedirs(os.path.dirname(temp_dest))
+            else:
+                temp_dest = dest
+            
+            with open(temp_dest, 'wb+') as destination:
                 destination.write(attrs['qqfile'][0])
                 # chunked
             if chunked and (int(attrs['qqtotalparts'][0]) - 1 == int(attrs['qqpartindex'][0])):
                 combine_chunks(attrs['qqtotalparts'][0],
                     attrs['qqtotalfilesize'][0],
-                    source_folder=os.path.dirname(dest),
-                    dest=os.path.join(app.config['UPLOAD_DIRECTORY'], attrs['qquuid'][0],
-                        attrs['qqfilename'][0]))
-                shutil.rmtree(os.path.dirname(os.path.dirname(dest)))
+                    source_folder=os.path.dirname(temp_dest),
+                    dest=dest)
+                shutil.rmtree(os.path.dirname(os.path.dirname(temp_dest)))
             # End section copied from fine-uploader-server
         accept()
 
@@ -433,9 +497,9 @@ class MyHandler(SimpleHTTPRequestHandler):
         if not config.uploadEnabled:
             self.notAllowed(subfolder)
             return
-        folder = os.path.join(config.baseFolder, subfolder)
+        folder = base_dir(subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
-        nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
+        nav_folders = folder.split(os.sep)[numBase + 1:]
 
         r = uptemplate.render(dep=depVersions,
                               subfolder=subfolder,
@@ -453,6 +517,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Download a zip file
     def downloadZip(self, subfolder, files):
+        base_dir(subfolder) # check for security concern
         print("Downloading Zip in folder: " + subfolder)
         self.send_response(200)
         self.send_header('Content-type', 'application/zip')
@@ -460,7 +525,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         with zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED) as z:
             for f in files:
-                fullpath = os.path.join(config.baseFolder, subfolder, f)
+                fullpath = base_dir(subfolder, f)
                 if os.path.isdir(fullpath):
                     self._packFolder(z, subfolder, f)
                 else:
@@ -475,7 +540,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## Packs a folder inside the ZIP; is recursive
     def _packFolder(self, z, subfolder, target):
-        folder = os.path.join(config.baseFolder, subfolder, target)
+        folder = base_dir(subfolder, target)
         folderList = sorted(listdir_dirs(folder, config.strictIgnoreHidden), key=lambda s: s.lower())
         fileList = sorted(listdir_files(folder, config.strictIgnoreHidden), key=lambda s: s.lower())
         for f in fileList:
@@ -487,7 +552,7 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     ## 404
     def notFound(self, subfolder):
-        folder = os.path.join(config.baseFolder, subfolder)
+        folder = base_dir(subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
         nav_folders = os.path.normpath(os.path.join(config.baseFolder, subfolder)).split(os.sep)[numBase + 1:]
 
@@ -506,7 +571,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.wfile.write(r.encode("utf-8"))
         self.wfile.flush()
     
-    ## 403 (currently used for saying that uploading is not allowed
+    ## 403 if path tries to get outside of baseFolder or if user tries to upload when it is disabled
     def notAllowed(self, subfolder):
         folder = os.path.join(config.baseFolder, subfolder)
         up_level = os.path.dirname(subfolder) if subfolder else ""
@@ -517,7 +582,7 @@ class MyHandler(SimpleHTTPRequestHandler):
                                  up_level=up_level,
                                  nav_folders=nav_folders,
                                  page_title="Not allowed",
-                                 msg="This functionality has been disabled.",
+                                 msg="This is not permitted.",
                                  errorCode=403,
                                  config=config)
         self.send_response(403)

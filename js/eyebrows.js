@@ -2,20 +2,18 @@ $(window).load(function() {
     $(function($) {
         $(".swipebox").swipebox();
     });
+    
+    $(window).on('hashchange', onHashChange);
+    
+    // Change hash immediately if need be
+    if(window.location.hash!="") {
+        var sansHash = window.location.href.substr(0, window.location.href.length - window.location.hash.length)
+        var hash = window.location.hash.substr(1);
+        console.log("ReplaceState", sansHash);
+        history.replaceState(null, null, sansHash)
+        changeHash(hash);
+    }
 
-    $(".vid-file").click(function(event) {
-        event.preventDefault();
-        var href = $(this).prop('href');
-        var title = $(this).text();
-        clickVideo(href, title);
-        event.stopPropagation();
-    });
-    $(".img-file").click(function(event) {
-        event.preventDefault();
-        var val = $(this).text();
-        clickImage(val)
-        event.stopPropagation();
-    });
     $("#select-all").click(function() {
         $('.chk').prop('checked', $(this).prop('checked'));
         updateDownloadCount();
@@ -40,37 +38,39 @@ $(window).load(function() {
             }
         });
     });
+    
+    var clickableRows = $(".clickableRow");
 
 
-    $(".clickableRow").click(function(event) {
+    clickableRows.click(function(event) {
         var icon = $($($(this).children()[1]).children()[0]);
         var href = $($($(this).children()[2]).children()[0]);
         console.log(href);
-        if(icon.hasClass("fa-picture-o"))
+        if(href.hasClass("swipe"))
         {
-
-            clickImage(href.text());
+            changeHash(href.text());
             event.preventDefault();
-        } else if(icon.hasClass("fa-film")) {
-            clickVideo(href.prop('href'), href.text());
-            event.preventDefault();
-        } else {
-            window.document.location = href.attr("href");
-        }
+        } else
+            window.location.href = href.attr("href");
     });
 
-    try {$('tbody.rowlink').rowlink(); } catch(e) {}
+    if(clickableRows.length < 50)
+        try {$('tbody.rowlink').rowlink(); } catch(e) {}
     
-    $(".clickableRow").hover(function(){
-            $(this).find('.info-btn').removeClass('invisible');
+    clickableRows.hover(function(){
+            $(this).find('.info').removeClass('invisible');
         }, function(){
-            $(this).find('.info-btn').addClass('invisible');
+            $(this).find('.info').addClass('invisible');
         }
     );
     
     $('.info-btn').click(function(event) {
         console.log(this);
-        $(this).find('.dropdown-toggle').dropdown()
+        $(this).parent('.info').find('.dropdown-toggle').dropdown()
+        event.preventDefault();
+        event.stopPropagation();
+    });
+    $('.info-popup').click(function(event) {
         event.preventDefault();
         event.stopPropagation();
     });
@@ -104,19 +104,47 @@ function downloadChecked() {
     });
 }
 
-
-function clickVideo(src, title) {
-    var arr = [{href: src, title: title}];
-    $.swipebox(arr, {hideBarsDelay : hideBarsDelay});
-    console.log("Clicked video " + title);
+function onHashChange(event) {
+    console.log("hashchange", window.location.hash);
+    var filename = window.location.hash.substr(1);
+    if(filename == "") {
+        if($.swipebox.isOpen) {
+            $.swipebox.close();
+        }
+    }
+    else
+        clickMedia(filename);
+    if(event!=null) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 }
 
-function clickImage(val) {
+function changeHash(to) {
+    if(history.pushState) {
+        console.log("pushState", "#"+to);
+        history.pushState(null, null, "#" + to);
+        onHashChange();
+    } else
+        window.location.hash = to;
+}
+
+function clickMedia(val) {
     var i;
-    for(i = 0; i<window.imageArray.length; i++) {
-        if(window.imageArray[i].title == val)
+    val = decodeURIComponent(val);
+    for(i = 0; i<window.swipeboxArray.length; i++) {
+        if(window.swipeboxArray[i].title == val)
             break;
     }
-    $.swipebox(window.imageArray, {initialIndexOnArray: i, hideBarsDelay : hideBarsDelay});
-    console.log("Clicked image" + i);
+    if(i<window.swipeboxArray.length)
+        $.swipebox(window.swipeboxArray,{
+            initialIndexOnArray: i,
+            hideBarsDelay : hideBarsDelay,
+            afterClose: function() {
+                console.log("Going Back");
+                if(history.pushState)
+                    history.back();
+            }
+        });
+    console.log("Clicked media " + i);
 }

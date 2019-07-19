@@ -46,7 +46,7 @@ Also I wanted to write something simple in Python.
   * [jQuery 1.10.2](http://jquery.com/)
   * [Bootstrap 3.0.3](http://getbootstrap.com/)
   * [FontAwesome 4.0.3](http://fontawesome.io/)
-  * [Swipebox 4e8338](https://github.com/brutaldesign/swipebox/tree/4e8338ec2740ca75eb8a39247c275f1a1b3d7539)
+  * [Swipebox 1.4.4](https://github.com/brutaldesign/swipebox/tree/4e8338ec2740ca75eb8a39247c275f1a1b3d7539)
   * [Sala de Fiest font](http://openfontlibrary.org/en/font/sala-de-fiesta)
   * [Eyebrow Photoshop Brush](http://www.photoshopwebsite.com/photoshop-brushes/28-photoshop-eyebrow-brushes-free-download/)
 
@@ -89,3 +89,13 @@ Why not either of the options I stated? Because (a) Support for video in HTML5 i
 Eyebrows *should* theoretically work with just about any browser out there.
 
 *However*, it takes advantage of a lot things like CSS3 and HTML5 that might not work correctly in older browsers.
+
+
+6. Todo
+----------------
+
+ * Sometimes the SwipeBox is too big on mobile (switching to "Request Desktop Site" fixes this, weirdly)
+ * Loading a page with tons of entries is a nightmare (for Firefox)
+   * one solution would be to load 100 at first, then use AJAX to load 100 more as you scroll/with a button click
+ * security concern in downloadZip
+ 
